@@ -36,16 +36,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val sharedPrefs = getSharedPreferences(getString(R.string.shared_prefs_name), MODE_PRIVATE)
-//        val prefsEdit = sharedPrefs.edit()
-//        prefsEdit.putBoolean("ALT_USE_DEFAULT", true).apply()
-//        val shpWorking = if (sharedPrefs.getBoolean("ALT_USE_DEFAULT", false)) {
-//            "SharedPreferences Working...."
-//        } else {
-//            "Not Working...."
-//        }
-//        Toast.makeText(this, shpWorking, Toast.LENGTH_SHORT).show()
-
         headerFont = Typeface.createFromAsset(assets, "fonts/Helvetica Neu Bold.ttf")
         bodyFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeue Medium.ttf")
 
@@ -69,12 +59,14 @@ class MainActivity : AppCompatActivity() {
     private fun setupMainViewPager() {
         no_permission_view.visibility = View.GONE
         main_tablayout.visibility = View.VISIBLE
+        main_viewpager.visibility = View.VISIBLE
+
         main_viewpager.adapter = MainViewPagerAdapter(this, supportFragmentManager)
-        setupTabBadge(main_tablayout, 2)
         main_tablayout.setupWithViewPager(main_viewpager)
+        setupTabBadge(main_tablayout, 2)
+
         main_tablayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabReselected(tab: TabLayout.Tab?) {
-
             }
 
             @SuppressLint("NewApi")
@@ -97,18 +89,24 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    @SuppressLint("NewApi")
     private fun setupTabBadge(tablayout: TabLayout, length: Int) {
         val aUtils = AppUtil(this)
         val count = arrayOf(aUtils.allStatuses.size, aUtils.savedStatuses.size)
         for (i in 0 until length) {
             val tab = tablayout.getTabAt(i)
-            tab!!.setCustomView(R.layout.custom_tab_view)
-            val tabText = tab.customView?.findViewById(android.R.id.text1) as TextView
+            tab?.setCustomView(R.layout.custom_tab_view)
+            val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
             tabText.typeface = headerFont
+
             if (tab.customView != null) {
                 val badge = tab.customView?.findViewById(R.id.badge) as TextView
                 badge.text = "${count[i]}"
                 badge.typeface = headerFont
+                if (i == 0) {
+                    tabText.setTextColor(Color.WHITE)
+                    badge.backgroundTintList = ContextCompat.getColorStateList(this, android.R.color.white)
+                }
             }
         }
     }
@@ -124,17 +122,16 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
             R.id.menu_share -> {
-                val downloadLink = "Download this awesome app and save all your favourite whatsapp status easily playstore/myapp_link"
+                val downloadLink = "Download this awesome app and save all your favourite whatsapp status easily\n" +
+                        "Playstore Link: ${getString(R.string.app_playstore_link)}"
                 val shareTitle = "Share this app"
-                ShareCompat.IntentBuilder.from(this)
-                        .setChooserTitle(shareTitle)
-                        .setType("text/plain")
-                        .setText(downloadLink).startChooser()
-                val shareIntent = Intent(Intent.ACTION_SEND)
-                shareIntent.setType("*/*")
-                shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(AppUtil(this).getApkFile()))
-                shareIntent.putExtra(Intent.EXTRA_TEXT, downloadLink)
-//                startActivity(Intent.createChooser(shareIntent, shareTitle))
+                val shareIntent = ShareCompat.IntentBuilder.from(this)
+                shareIntent.setChooserTitle(shareTitle)
+                        .setType("*/*")
+                        .setText(downloadLink)
+                val apkFile = AppUtil(this).getApkFile()
+                if (apkFile != null) shareIntent.setStream(Uri.fromFile(apkFile))
+                shareIntent.startChooser()
             }
             R.id.menu_help -> {
 
@@ -150,11 +147,7 @@ class MainActivity : AppCompatActivity() {
                 Log.v(TAG, "Permission is granted")
                 return true
             } else {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                    ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-                } else {
-                    ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-                }
+                ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
                 Log.v(TAG, "Permission is revoked")
                 return false
             }

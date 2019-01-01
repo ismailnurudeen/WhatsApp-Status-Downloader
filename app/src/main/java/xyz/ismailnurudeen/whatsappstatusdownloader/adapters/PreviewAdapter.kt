@@ -129,7 +129,7 @@ class PreviewAdapter(val context: Context, val allStatuses: MutableCollection<Fi
 
             override fun onAnimationEnd(animation: Animator?) {
                 slideCompleteListener.onSlideComplete(pos)
-                if(pos !=allStatuses.size) preview.toolbar_progressBar.setProgress(0)
+                if(pos !=allStatuses.size) preview.toolbar_progressBar.progress = 0
             }
 
             override fun onAnimationCancel(animation: Animator?) {

@@ -1,6 +1,8 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader
 
+import android.net.Uri
 import android.os.Bundle
+import android.support.v4.app.ShareCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
@@ -17,6 +19,8 @@ import java.util.*
 
 class PreviewActivity : AppCompatActivity() {
     lateinit var pagerAdapter: PreviewAdapter
+    val titles = ArrayList<String>()
+    lateinit var statusList: MutableCollection<File>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -27,8 +31,6 @@ class PreviewActivity : AppCompatActivity() {
         val extras = intent.extras
         val position = extras!!.getInt("POSITION")
         val fromAll = extras.getBoolean("FROM_ALL", true)
-        val titles = ArrayList<String>()
-        val statusList: MutableCollection<File>
 
         if (fromAll) {
             statusList = appUtil.allStatuses
@@ -41,22 +43,26 @@ class PreviewActivity : AppCompatActivity() {
                 titles.add(file.name)
             }
         }
-        val onSlideCompleteListener = object : PreviewAdapter.OnSlideCompleteListener {
+        val onSlideCompleteListener = object : PreviewFragment.OnSlideCompleteListener {
             override fun onSlideComplete(pos: Int) {
                 // Toast.makeText(this@PreviewActivity, "Slide Complete", Toast.LENGTH_SHORT).show()
-                if (pos < statusList.size - 1) preview_pager.currentItem = pos + 1
+//                && pos > PreviewFragment.tempPosition
+                if (pos < statusList.size - 1) {
+                    preview_pager.currentItem = pos + 1
+                } else {
+                    finish()
+                }
             }
         }
+
         preview_pager.setPageTransformer(true, RotateDownTransformer())
 //        pagerAdapter = PreviewAdapter(this, statusList, titles, onSlideCompleteListener)
 //        preview_pager.adapter = pagerAdapter
-//        preview_pager.offscreenPageLimit = 0
 //        preview_pager.setCurrentItem(position)
 
-        PreviewFragment.statusList = statusList
         val fragPagerAdapter = AltPreviewAdapter(supportFragmentManager)
         for (i in 0 until statusList.size) {
-            fragPagerAdapter.addFragment(PreviewFragment.newInstance(i))
+            fragPagerAdapter.addFragment(PreviewFragment.newInstance(i,fromAll,onSlideCompleteListener))
         }
 
         preview_pager.adapter = fragPagerAdapter
@@ -84,7 +90,12 @@ class PreviewActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item!!.itemId) {
             R.id.menu_share -> {
-
+                val shareTitle = "Share File With"
+                ShareCompat.IntentBuilder.from(this)
+                        .setChooserTitle(shareTitle)
+                        .setType("*/*")
+                        .setStream(Uri.fromFile(statusList.elementAt(preview_pager.currentItem)))
+                        .startChooser()
             }
         }
         return super.onOptionsItemSelected(item)

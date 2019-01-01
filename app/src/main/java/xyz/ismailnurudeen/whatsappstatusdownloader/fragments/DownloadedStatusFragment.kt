@@ -29,7 +29,6 @@ import java.io.File
 
 class DownloadedStatusFragment : Fragment() {
     var savedStatuses: MutableCollection<File>? = null
-    private var _hasLoadedOnce = false
     val TAG = "whatsappstatusstealer"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -62,6 +61,7 @@ class DownloadedStatusFragment : Fragment() {
                             savedStatuses!!.remove(savedStatuses!!.elementAt(pos))
                             downloaded_status_rv.adapter!!.notifyDataSetChanged()
                             setupTabBadge()
+                            if (savedStatuses!!.isEmpty()) loadStatuses()
                             Toast.makeText(context, "Status Deleted", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -79,11 +79,13 @@ class DownloadedStatusFragment : Fragment() {
         if (savedStatuses!!.isNotEmpty()) {
             downloaded_status_rv.visibility = View.VISIBLE
             empty_layout.visibility = View.GONE
-
-            downloaded_status_rv.adapter = StatusAdapter(context!!, savedStatuses!!, onClick, onLongClick, false)
+            val adapter = StatusAdapter(context!!, savedStatuses!!, onClick, onLongClick, false)
+            downloaded_status_rv.adapter = adapter
             delete_all_downloads.setOnClickListener {
                 appUtil.deleteAllFiles(savedStatuses!!)
                 savedStatuses!!.clear()
+                adapter.notifyDataSetChanged()
+                loadStatuses()
             }
         } else {
             downloaded_status_rv.visibility = View.GONE
@@ -101,8 +103,7 @@ class DownloadedStatusFragment : Fragment() {
     @SuppressLint("NewApi")
     private fun setupTabBadge() {
         val tab = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
-        val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
-        val badge = tab.customView?.findViewById(R.id.badge) as TextView
+        val badge = tab?.customView?.findViewById(R.id.badge) as TextView
         badge.text = "${savedStatuses!!.size}"
     }
 

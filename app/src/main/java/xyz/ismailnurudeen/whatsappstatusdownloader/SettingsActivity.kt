@@ -29,19 +29,19 @@ class SettingsActivity : AppCompatPreferenceActivity(), SharedPreferences.OnShar
         showVideoControls = this.getString(R.string.show_video_controls_key)
 
         val sharedPreferences = preferenceScreen.sharedPreferences
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        val prefScreen = getPreferenceScreen()
-        val count = prefScreen.getPreferenceCount()
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        val prefScreen = preferenceScreen
+        val count = prefScreen.preferenceCount
         if (sharedPreferences.getBoolean(this.getString(R.string.do_slide_show_key), false)) {
-            findPreference(slideShowTime).setEnabled(true)
+            findPreference(slideShowTime).isEnabled = true
         } else {
-            findPreference(slideShowTime).setEnabled(false)
+            findPreference(slideShowTime).isEnabled = false
         }
         for (i in 0 until count) {
-            val pref = prefScreen.getPreference(i);
+            val pref = prefScreen.getPreference(i)
             if (!(pref is SwitchPreference) && !(pref is CheckBoxPreference)) {
-                val value = sharedPreferences.getString(pref.getKey(), "");
-                setPreferenceSummary(pref, value);
+                val value = sharedPreferences.getString(pref.key, "")
+                setPreferenceSummary(pref, value)
             }
         }
     }
@@ -51,7 +51,7 @@ class SettingsActivity : AppCompatPreferenceActivity(), SharedPreferences.OnShar
      */
     @SuppressLint("NewApi")
     private fun setupActionBar() {
-        val root = findViewById<View>(android.R.id.list).getParent().getParent().getParent() as LinearLayout
+        val root = findViewById<View>(android.R.id.list).parent.parent.parent as LinearLayout
         val appBar = LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false) as AppBarLayout
         val toolbar = appBar.findViewById<android.support.v7.widget.Toolbar>(R.id.settings_toolbar)
         root.addView(appBar, 0)
@@ -74,9 +74,9 @@ class SettingsActivity : AppCompatPreferenceActivity(), SharedPreferences.OnShar
         if (null != pref) {
             if (key.equals(doSlideShowKey)) {
                 if (sharedPreferences.getBoolean(doSlideShowKey, false)) {
-                    findPreference(slideShowTime).setEnabled(true);
+                    findPreference(slideShowTime).isEnabled = true
                 } else {
-                    findPreference(slideShowTime).setEnabled(false);
+                    findPreference(slideShowTime).isEnabled = false
                 }
             }
         }

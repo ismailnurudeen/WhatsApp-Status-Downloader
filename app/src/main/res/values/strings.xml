@@ -14,7 +14,7 @@
     <string name="no_downloaded_status_txt">Oopps... You haven\'t downloaded any status yet,go to all status and download some</string>
     <string name="no_permission_txt">The app needs External Storage Permission to work,pls grant permission to continue</string>
     <string name="title_activity_settings">Settings</string>
-
+    <string name="app_playstore_link">https://pay.google.com/store/apps/details?id=xyz.ismailnurudeen.whatsappstatusstealer</string>
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
@@ -24,6 +24,7 @@
     <string name="show_video_controls_key">SHOW_VIDEO_CONTROLS</string>
     <string name="shared_prefs_name">xyz.ismailnurudeen.whatsappstatusstealer_preferences</string>
     <string name="slide_show_time_key">SLIDE_SHOW_TIME</string>
+    <string name="slide_show_time_minmax">Min 5 secs,Max 60 secs</string>
     <string-array name="slide_show_time_entries">
         <item>30 sec</item>
         <item>1 min</item>

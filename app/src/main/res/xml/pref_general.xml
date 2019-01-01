@@ -13,11 +13,11 @@
         android:title="Status Slide Show" />
 
     <EditTextPreference
-        android:defaultValue="30"
-        android:hint="time in seconds"
+        android:defaultValue="15"
+        android:hint="15"
         android:inputType="number"
         android:key="@string/slide_show_time_key"
-        android:summary="Min 5 secs,Max 60 secs"
+        android:summary="@string/slide_show_time_minmax"
         android:title="Slide Show Time" />
 
     <SwitchPreference

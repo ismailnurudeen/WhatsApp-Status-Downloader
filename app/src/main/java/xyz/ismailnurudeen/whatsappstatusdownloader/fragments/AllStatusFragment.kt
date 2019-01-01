@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.TabLayout
@@ -42,6 +43,7 @@ class AllStatusFragment : Fragment() {
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
         super.onViewCreated(v, savedInstanceState)
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
+           // setupMainTabBadge(activity!!.findViewById(R.id.main_tablayout), 2)
             loadStatuses()
         }
     }
@@ -112,8 +114,8 @@ class AllStatusFragment : Fragment() {
 
     @SuppressLint("NewApi")
     private fun setupTabBadge() {
-        val tab = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(0)
-        val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
+        val tab = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(0) ?: return
+        val tabText = tab.customView?.findViewById(android.R.id.text1) as TextView
         val badge = tab.customView?.findViewById(R.id.badge) as TextView
         badge.text = "${allStatuses!!.size}"
 

@@ -2,6 +2,8 @@ package xyz.ismailnurudeen.whatsappstatusdownloader.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Build
 import android.preference.PreferenceManager
 import android.support.v7.app.AlertDialog
@@ -74,7 +76,7 @@ class AppUtil(val context: Context) {
             }
 
             try {
-                isDownloaded = copyFile(allStatuses.elementAt(pos), pathToStoreStatus)
+                isDownloaded = copyFile(allStatuses.elementAt(pos), File(pathToStoreStatus))
                 if (isDownloaded) Toast.makeText(context, "Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -119,9 +121,8 @@ class AppUtil(val context: Context) {
     }
 
     @Throws(IOException::class)
-    private fun copyFile(source: File, to: String): Boolean {
-        var isCopied = false
-        val destination = File(to)
+    private fun copyFile(source: File, destination: File): Boolean {
+        val isCopied: Boolean
 
 //        //  Delete File if it already exist
 //        for (file in savedStatuses!!) {
@@ -134,7 +135,7 @@ class AppUtil(val context: Context) {
             FileUtils.copyFile(source, destination)
             isCopied = true
         } else {
-            Log.i(TAG, "Status already exits...")
+            Log.i(TAG, "File already exits...")
             isCopied = false
         }
         return isCopied
@@ -163,7 +164,18 @@ class AppUtil(val context: Context) {
         val appInfo = context.packageManager.getApplicationInfo(context.packageName, 0)
         val apkFile = File(appInfo.publicSourceDir)
         val path = "${context.externalCacheDir}/ExtractedApk/WhatsAppStatusDownloader.apk"
-        if (copyFile(apkFile, path)) return File(path)
+        //  val path = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/ExtractedApk/WhatsAppStatusDownloader.apk"
+        val newApkFile = File(path)
+        if (copyFile(apkFile, newApkFile)) return newApkFile
         return null
+    }
+
+    fun getVideoDuration(videoFile: File): Long {
+        val retriver = MediaMetadataRetriever()
+        retriver.setDataSource(context, Uri.fromFile(videoFile))
+        val time = retriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        retriver.release()
+
+        return time.toLong()
     }
 }

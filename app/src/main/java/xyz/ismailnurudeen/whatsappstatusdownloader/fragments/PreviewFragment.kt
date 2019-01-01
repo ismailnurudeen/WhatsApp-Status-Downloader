@@ -1,29 +1,87 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 
+import android.animation.Animator
+import android.animation.ObjectAnimator
+import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
+import android.support.v4.app.ShareCompat
+import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.view.animation.AnimationUtils
+import android.view.animation.DecelerateInterpolator
+import android.widget.MediaController
+import android.widget.PopupMenu
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.layout_preview.view.*
+import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
+import xyz.ismailnurudeen.whatsappstatusdownloader.MainActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
+import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import java.io.File
 
+@Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
-    var position: Int = -1
-    private var statuses: MutableCollection<File>? = null
-    private lateinit var preview: View
-    var _isFirstLoad = false
-    var mListener: PreviewActivity.PreviewReadyListener? = null
+    private var position: Int = -1
+    private var preview: View? = null
+    private var _isFirstLoad = false
+    private lateinit var sharedPrefs: SharedPreferences
+    private var mSlideShow: Boolean = true
+    private var mSlideShowTime: Long = 30
+    private var mShowVideoControls: Boolean = false
+    private var progressAnimator: ObjectAnimator? = null
+    private var isUserSlide = false
+    private var fromAllStatus = true
+
+    private var previewTitles = ArrayList<String>()
+    private lateinit var statusList: MutableCollection<File>
+    private var controller: MediaController? = null
+    private var mSlideCompleteListener: OnSlideCompleteListener? = null
+
+    private lateinit var appUtil: AppUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appUtil = AppUtil(context!!)
         val args = arguments
         position = args?.getInt("POSITION") ?: position
-        statuses = statusList
+        fromAllStatus = args!!.getBoolean("USE_ALL_STATUS")
+        if (fromAllStatus) {
+            statusList = appUtil.allStatuses
+            for (file in statusList) {
+                previewTitles.add(appUtil.getStatusTimeLeft(file))
+            }
+        } else {
+            statusList = appUtil.savedStatuses
+            for (file in statusList) {
+                previewTitles.add(file.name)
+            }
+        }
+
+
+
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        mSlideShow = sharedPrefs.getBoolean(context?.getString(R.string.do_slide_show_key), true)
+        mShowVideoControls = sharedPrefs.getBoolean(context?.getString(R.string.show_video_controls_key), false)
+        val slideShowTime = sharedPrefs.getString(context?.getString(R.string.slide_show_time_key), "15")
+        if (slideShowTime.isNotEmpty()) {
+            mSlideShowTime = if (slideShowTime.toInt() < 5) {
+                5
+            } else if (slideShowTime.toInt() > 60) {
+                60
+            } else {
+                slideShowTime.toLong()
+            }
+        } else {
+            mSlideShowTime = 15
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -34,17 +92,24 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         super.onViewCreated(v, savedInstanceState)
         preview = v
         if (isVisible && userVisibleHint) {
-            selectPreviewType(preview, statuses!!.elementAt(position))
-            Toast.makeText(context, "position ${position} is Visible", Toast.LENGTH_SHORT).show()
+            setupPreview(v)
+            Log.i(Constant.TAG, "position $position is Visible")
         }
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
-        if (isVisible && isVisibleToUser) {
-            if (!_isFirstLoad) {
-                selectPreviewType(preview, statuses!!.elementAt(position))
+        if (isVisible) {
+            if (isVisibleToUser && !_isFirstLoad) {
+                selectPreviewType(preview!!, statusList.elementAt(position))
                 _isFirstLoad = true
+            }
+            if (!isVisibleToUser) {
+                if (preview!!.video_preview.isPlaying) preview!!.video_preview.stopPlayback()
+                if (progressAnimator!!.isRunning) {
+                    isUserSlide = true
+                }
+                progressAnimator?.cancel()
             }
         }
     }
@@ -54,29 +119,152 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         if (file.extension.contains("jpg", true)) {
             preview.image_preview.visibility = View.VISIBLE
             preview.video_preview.visibility = View.GONE
-            Glide.with(context!!)
-                    .load(file)
-                    .into(preview.image_preview)
+            if (context != null) {
+                Glide.with(context!!)
+                        .load(file)
+                        .into(preview.image_preview)
+            }
         } else {
             preview.video_preview.visibility = View.VISIBLE
             preview.image_preview.visibility = View.GONE
             preview.video_preview.setVideoPath(file.absolutePath)
+
+            mSlideShowTime = AppUtil(context!!).getVideoDuration(file)
+            Log.i("M SLIDE SHOW TIME", "Video Slide Show time $mSlideShow")
             preview.video_preview.start()
+
+            if (mShowVideoControls) {
+                controller = MediaController(context)
+                preview.video_preview.setMediaController(controller)
+                controller!!.show()
+            }
+        }
+        preview.toolbar_progressBar.visibility = View.INVISIBLE
+        if (mSlideShow) {
+            preview.toolbar_progressBar.visibility = View.VISIBLE
+            animateSlider(preview, statusList.indexOf(file))
         }
     }
 
     override fun onPreviewReady(pos: Int) {
-        selectPreviewType(preview, statuses!!.elementAt(pos))
-        Toast.makeText(context, "position ${pos} has been scrolled to", Toast.LENGTH_SHORT).show()
+        if (preview == null) return
+        setupPreview(preview!!)
+    }
+
+    private fun setupPreview(preview: View) {
+        selectPreviewType(preview, statusList.elementAt(position))
+        preview.video_preview.setOnTouchListener { _, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
+                controller?.show()
+                progressAnimator?.pause()
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+                progressAnimator?.resume()
+            }
+            true
+        }
+        preview.image_preview.setOnTouchListener { _, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
+                progressAnimator?.pause()
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+                progressAnimator?.resume()
+            }
+            true
+        }
+
+        preview.toolbar_time_left.text = previewTitles[position]
+        preview.preview_download.setOnClickListener {
+            AppUtil(context!!).renameFileAndDownload(position)
+        }
+        if (fromAllStatus) {
+            preview.preview_download.visibility = View.VISIBLE
+        } else {
+            preview.preview_download.visibility = View.GONE
+        }
+        preview.toolbar_action_back.setOnClickListener {
+            gotoMainActivity()
+        }
+        preview.preview_action_menu.setOnClickListener {
+            val menu = PopupMenu(context, it)
+            val inflater = menu.menuInflater
+            inflater.inflate(R.menu.preview_menu, menu.menu)
+            menu.show()
+            progressAnimator?.pause()
+            menu.setOnMenuItemClickListener {
+                if (it.itemId == R.id.menu_share) {
+                    val shareTitle = "Share File With"
+                    ShareCompat.IntentBuilder.from(activity)
+                            .setChooserTitle(shareTitle)
+                            .setType("*/*")
+                            .setStream(Uri.fromFile(statusList.elementAt(position)))
+                            .startChooser()
+                }
+                true
+            }
+            menu.setOnDismissListener {
+                progressAnimator?.resume()
+            }
+
+        }
+    }
+
+    private fun gotoMainActivity() {
+        val backIntent = Intent(context, MainActivity::class.java)
+        backIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(backIntent)
+    }
+
+    private fun animateSlider(preview: View, pos: Int) {
+        progressAnimator = ObjectAnimator.ofInt(preview.toolbar_progressBar, "progress", 0, 100)
+        progressAnimator?.duration = mSlideShowTime * 1000
+        progressAnimator?.interpolator = DecelerateInterpolator()
+
+        progressAnimator?.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationRepeat(animation: Animator?) {
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                if (!isUserSlide) {
+                    mSlideCompleteListener?.onSlideComplete(pos)
+                    if (pos < statusList.size) preview.toolbar_progressBar.progress = 0
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+
+            }
+
+            override fun onAnimationStart(animation: Animator?) {
+
+            }
+
+        })
+        progressAnimator?.start()
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (progressAnimator != null) {
+            progressAnimator?.removeAllListeners()
+        }
+    }
+
+    interface OnSlideCompleteListener {
+        fun onSlideComplete(pos: Int)
     }
 
     companion object {
-        var statusList: MutableCollection<File>? = null
-        fun newInstance(position: Int): PreviewFragment {
+        fun newInstance(position: Int, fromAll: Boolean, listener: OnSlideCompleteListener): PreviewFragment {
             val pf = PreviewFragment()
             val args = Bundle()
             args.putInt("POSITION", position)
+            args.putBoolean("USE_ALL_STATUS", fromAll)
             pf.arguments = args
+            pf.mSlideCompleteListener = listener
             return pf
         }
     }
