@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">WhatsApp Status Downloader</string>
+    <string name="app_name_alt">Status Downloader</string>
+    <string name="save_all_status">Save All Status</string>
+    <string name="settings">Settings</string>
+    <string name="share">Share</string>
+    <string name="help">Help</string>
+
+    <!--AdMob values-->
+    <string name="app_id">ca-app-pub-6262072701452947~7795108663</string>
+    <string name="bottom_ad_unit_id">ca-app-pub-6262072701452947/1393351849</string>
+    <string name="sample_banner_ad_unit">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="no_status_txt">Oopps... Theres no status available go to Whatsapp view a status then comeback and click the refresh button or you could just do it now.</string>
+    <string name="no_downloaded_status_txt">Oopps... You haven\'t downloaded any status yet,go to all status and download some</string>
+    <string name="no_permission_txt">The app needs External Storage Permission to work,pls grant permission to continue</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+    <string name="use_default_name_key">USE_DEFAULT_NAME</string>
+    <string name="do_slide_show_key">DO_SLIDE_SHOW</string>
+    <string name="show_video_controls_key">SHOW_VIDEO_CONTROLS</string>
+    <string name="shared_prefs_name">xyz.ismailnurudeen.whatsappstatusstealer_preferences</string>
+    <string name="slide_show_time_key">SLIDE_SHOW_TIME</string>
+    <string-array name="slide_show_time_entries">
+        <item>30 sec</item>
+        <item>1 min</item>
+        <item>2 min</item>
+        <item>3 min</item>
+    </string-array>
+    <string-array name="slide_show_time_values">
+        <item>30000</item>
+        <item>10000</item>
+        <item>20000</item>
+        <item>30000</item>
+        <item>40000</item>
+        <item>50000</item>
+    </string-array>
+</resources>

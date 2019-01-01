@@ -1,0 +1,28 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/use_default_name_key"
+        android:summary="Avoid rename dialog when downloading status by using default status name"
+        android:title="Always Use Default Name" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/do_slide_show_key"
+        android:summary="Automatically start slide show on status preview"
+        android:title="Status Slide Show" />
+
+    <EditTextPreference
+        android:defaultValue="30"
+        android:hint="time in seconds"
+        android:inputType="number"
+        android:key="@string/slide_show_time_key"
+        android:summary="Min 5 secs,Max 60 secs"
+        android:title="Slide Show Time" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/show_video_controls_key"
+        android:summary="Display control buttons for video status"
+        android:title="Enable Video Controls" />
+</PreferenceScreen>
