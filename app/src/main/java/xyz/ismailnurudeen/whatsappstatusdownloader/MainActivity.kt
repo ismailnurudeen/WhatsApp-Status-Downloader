@@ -2,6 +2,8 @@ package xyz.ismailnurudeen.whatsappstatusdownloader
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -14,7 +16,9 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.app.ShareCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.text.util.Linkify
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -22,10 +26,12 @@ import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
+import kotlinx.android.synthetic.main.about_dialog_layout.view.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.layout_no_permission.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.MainViewPagerAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
+import java.util.regex.Pattern
 
 
 class MainActivity : AppCompatActivity() {
@@ -36,10 +42,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        headerFont = Typeface.createFromAsset(assets, "fonts/Helvetica Neu Bold.ttf")
-        bodyFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeue Medium.ttf")
+        headerFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeueBd.ttf")
+        bodyFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeueLt.ttf")
 
         setSupportActionBar(main_toolbar)
+
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
             setupMainViewPager()
         }
@@ -61,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         main_tablayout.visibility = View.VISIBLE
         main_viewpager.visibility = View.VISIBLE
 
-        main_viewpager.adapter = MainViewPagerAdapter(this, supportFragmentManager)
+        main_viewpager.adapter = MainViewPagerAdapter(supportFragmentManager)
         main_tablayout.setupWithViewPager(main_viewpager)
         setupTabBadge(main_tablayout, 2)
 
@@ -136,8 +143,40 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_help -> {
 
             }
+            R.id.menu_about -> {
+                showAboutDialog()
+            }
+            R.id.menu_feedback -> {
+                rateThisApp()
+            }
         }
-        return super.onOptionsItemSelected(item)
+        return false
+    }
+
+    private fun showAboutDialog() {
+        val v = LayoutInflater.from(this).inflate(R.layout.about_dialog_layout, null)
+        val builder = AlertDialog.Builder(this)
+                .setView(v)
+        val dialog = builder.create()
+        val p = Pattern.compile("here")
+        Linkify.addLinks(v.about_me, p, null, null) { _, _ ->
+            "http://www.ismailnurudeen.xyz"
+        }
+        v.ok_btn.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    private fun rateThisApp() {
+        val uri = Uri.parse("market://details?id=$packageName")
+        val rateIntent = Intent(Intent.ACTION_VIEW, uri)
+        rateIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY.or(Intent.FLAG_ACTIVITY_CLEAR_TASK).or(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        try {
+            startActivity(rateIntent)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+        }
     }
 
     private fun checkPermission(permission: String, requestCode: Int): Boolean {

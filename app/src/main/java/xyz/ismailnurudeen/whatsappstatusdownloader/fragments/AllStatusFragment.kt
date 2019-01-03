@@ -2,21 +2,21 @@ package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.support.design.widget.TabLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import com.bumptech.glide.Glide
@@ -33,8 +33,15 @@ import java.io.File
 class AllStatusFragment : Fragment() {
     var savedStatuses: MutableCollection<File>? = null
     var allStatuses: MutableCollection<File>? = null
+    private lateinit var sharedPrefs: SharedPreferences
+    lateinit var appUtil: AppUtil
     private var _hasLoadedOnce = false
     val TAG = "whatsappstatusstealer"
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        appUtil = AppUtil(context!!)
+        sharedPrefs = context!!.getSharedPreferences("STATUS_PREFS", Context.MODE_PRIVATE)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.layout_main_all_status, container, false)
@@ -42,17 +49,17 @@ class AllStatusFragment : Fragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
         super.onViewCreated(v, savedInstanceState)
+        setHasOptionsMenu(true)
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
-           // setupMainTabBadge(activity!!.findViewById(R.id.main_tablayout), 2)
+            // setupMainTabBadge(activity!!.findViewById(R.id.main_tablayout), 2)
             loadStatuses()
         }
     }
 
-    fun loadStatuses() {
+    private fun loadStatuses() {
         val f = File(Constant.appFolder)
         if (!f.exists()) f.mkdir()
 
-        val appUtil = AppUtil(context!!)
         allStatuses = appUtil.allStatuses
         savedStatuses = appUtil.savedStatuses
         setupTabBadge()
@@ -71,13 +78,16 @@ class AllStatusFragment : Fragment() {
                         startActivity(previewIntent)
                     }
                     StatusAdapter.OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DOWNLOAD_BUTTON -> {
-                        if (appUtil.renameFileAndDownload(pos)) {
-                            savedStatuses = appUtil.savedStatuses
-                            val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
-                            val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
-                            badge.text = "${savedStatuses!!.size}"
-                            v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
+                        val responseListener = object : AppUtil.OnUserDialogResponse {
+                            override fun onResponse(status: Boolean) {
+                                savedStatuses = appUtil.savedStatuses
+                                val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
+                                val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
+                                badge.text = "${savedStatuses!!.size}"
+                                v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
+                            }
                         }
+                        appUtil.renameFileAndDownload(pos, responseListener)
                     }
                     else -> {
                     }
@@ -95,6 +105,12 @@ class AllStatusFragment : Fragment() {
             status_rv.visibility = View.VISIBLE
             empty_layout.visibility = View.GONE
             status_rv.adapter = StatusAdapter(context!!, allStatuses!!, onClick, onLongClick)
+            if (sharedPrefs.getBoolean("IS_FIRST_LAUNCH_ALL_STATUS", true)) {
+                Handler().postDelayed({
+                    appUtil.showAllStatusTapTarget(activity!!)
+                }, 500)
+                sharedPrefs.edit().putBoolean("IS_FIRST_LAUNCH_ALL_STATUS", false).apply()
+            }
         } else {
             status_rv.visibility = View.GONE
             empty_layout.visibility = View.VISIBLE
@@ -107,7 +123,13 @@ class AllStatusFragment : Fragment() {
         }
         save_all.setOnClickListener {
             if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
-                appUtil.downloadAllStatus()
+                appUtil.downloadAllStatus(object : AppUtil.OnUserDialogResponse {
+                    override fun onResponse(status: Boolean) {
+                        Toast.makeText(context, "All Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
+                        loadStatuses()
+                    }
+
+                })
             }
         }
     }
@@ -157,4 +179,17 @@ class AllStatusFragment : Fragment() {
             _hasLoadedOnce = true
         }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        inflater!!.inflate(R.menu.all_status_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item!!.itemId) {
+            R.id.menu_help -> appUtil.showAllStatusTapTarget(activity!!)
+        }
+        return false
+    }
+
 }

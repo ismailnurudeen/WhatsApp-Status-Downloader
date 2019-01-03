@@ -2,6 +2,7 @@ package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -18,6 +19,7 @@ import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
 import android.widget.MediaController
 import android.widget.PopupMenu
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.layout_preview.view.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
@@ -25,6 +27,7 @@ import xyz.ismailnurudeen.whatsappstatusdownloader.MainActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
+import xyz.ismailnurudeen.whatsappstatusdownloader.utils.StatusVideoView
 import java.io.File
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -106,7 +109,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
             if (!isVisibleToUser) {
                 if (preview!!.video_preview.isPlaying) preview!!.video_preview.stopPlayback()
-                if (progressAnimator!!.isRunning) {
+                if (progressAnimator != null && progressAnimator!!.isRunning) {
                     isUserSlide = true
                 }
                 progressAnimator?.cancel()
@@ -115,7 +118,10 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
     }
 
     private fun selectPreviewType(preview: View, file: File) {
+        //Stop any previously playing video
         if (preview.video_preview.isPlaying || preview.video_preview.isActivated) preview.video_preview.stopPlayback()
+        if (controller != null && controller!!.isShowing) controller!!.hide()
+
         if (file.extension.contains("jpg", true)) {
             preview.image_preview.visibility = View.VISIBLE
             preview.video_preview.visibility = View.GONE
@@ -130,13 +136,28 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             preview.video_preview.setVideoPath(file.absolutePath)
 
             mSlideShowTime = AppUtil(context!!).getVideoDuration(file)
-            Log.i("M SLIDE SHOW TIME", "Video Slide Show time $mSlideShow")
+            Log.i("M_SLIDE_SHOW_TIME", "Video Slide Show time $mSlideShow")
+            mSlideShowTime = 30
             preview.video_preview.start()
 
             if (mShowVideoControls) {
                 controller = MediaController(context)
                 preview.video_preview.setMediaController(controller)
-                controller!!.show()
+                controller!!.show(5)
+                preview.video_preview.setPlayPauseListener(object : StatusVideoView.PlayPauseListener {
+                    override fun onPlay() {
+                        if (progressAnimator != null && progressAnimator!!.isPaused) {
+                            progressAnimator!!.resume()
+                        }
+                    }
+
+                    override fun onPause() {
+                        if (progressAnimator != null && progressAnimator!!.isRunning) {
+                            progressAnimator!!.pause()
+                        }
+                    }
+
+                })
             }
         }
         preview.toolbar_progressBar.visibility = View.INVISIBLE
@@ -151,33 +172,21 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         setupPreview(preview!!)
     }
 
+    @SuppressLint("SetTextI18n")
     private fun setupPreview(preview: View) {
         selectPreviewType(preview, statusList.elementAt(position))
-        preview.video_preview.setOnTouchListener { _, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
-                controller?.show()
-                progressAnimator?.pause()
-            } else if (event.action == KeyEvent.ACTION_UP) {
-                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
-                progressAnimator?.resume()
-            }
-            true
-        }
-        preview.image_preview.setOnTouchListener { _, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
-                progressAnimator?.pause()
-            } else if (event.action == KeyEvent.ACTION_UP) {
-                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
-                progressAnimator?.resume()
-            }
-            true
-        }
+        setListenersForMedia(preview)
 
-        preview.toolbar_time_left.text = previewTitles[position]
+
+        preview.toolbar_time_left.text = "${previewTitles[position]} left"
         preview.preview_download.setOnClickListener {
-            AppUtil(context!!).renameFileAndDownload(position)
+            val aUtil = AppUtil(context!!)
+            aUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
+                override fun onResponse(status: Boolean) {
+                    if (status) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
+                }
+
+            })
         }
         if (fromAllStatus) {
             preview.preview_download.visibility = View.VISIBLE
@@ -209,6 +218,44 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
 
         }
+    }
+
+    private fun setListenersForMedia(preview: View) {
+        preview.video_preview.setOnTouchListener { _, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
+                controller?.show()
+                progressAnimator?.pause()
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+                if (preview.video_preview.isPlaying) progressAnimator?.resume()
+            }
+            true
+        }
+//        preview.video_preview.setOnClickListener {
+//            mSlideCompleteListener?.onSlideComplete(position)
+//            if (progressAnimator != null && progressAnimator!!.isRunning) {
+//                isUserSlide = true
+//                progressAnimator!!.cancel()
+//            }
+//        }
+        preview.image_preview.setOnTouchListener { _, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
+                progressAnimator?.pause()
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+                progressAnimator?.resume()
+            }
+            true
+        }
+//        preview.image_preview.setOnClickListener {
+//            mSlideCompleteListener?.onSlideComplete(position)
+//            if (progressAnimator != null && progressAnimator!!.isRunning) {
+//                isUserSlide = true
+//                progressAnimator!!.cancel()
+//            }
+//        }
     }
 
     private fun gotoMainActivity() {

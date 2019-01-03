@@ -69,7 +69,12 @@ class PreviewAdapter(val context: Context, val allStatuses: MutableCollection<Fi
 
         itemView.toolbar_time_left.text = previewTitles[position]
         itemView.preview_download.setOnClickListener {
-            AppUtil(context).renameFileAndDownload(position)
+            val aUtil = AppUtil(context)
+            aUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
+                override fun onResponse(status: Boolean) {
+                }
+
+            })
         }
         itemView.toolbar_action_back.setOnClickListener {
             val backIntent = Intent(context, MainActivity::class.java)
@@ -110,7 +115,7 @@ class PreviewAdapter(val context: Context, val allStatuses: MutableCollection<Fi
                 preview.video_preview.setMediaController(controller)
             }
             preview.video_preview.start()
-          //  mSlideShowTime = preview.video_preview.duration
+            //  mSlideShowTime = preview.video_preview.duration
         }
         preview.toolbar_progressBar.visibility = View.INVISIBLE
         if (mSlideShow) {
@@ -129,7 +134,7 @@ class PreviewAdapter(val context: Context, val allStatuses: MutableCollection<Fi
 
             override fun onAnimationEnd(animation: Animator?) {
                 slideCompleteListener.onSlideComplete(pos)
-                if(pos !=allStatuses.size) preview.toolbar_progressBar.progress = 0
+                if (pos != allStatuses.size) preview.toolbar_progressBar.progress = 0
             }
 
             override fun onAnimationCancel(animation: Animator?) {
