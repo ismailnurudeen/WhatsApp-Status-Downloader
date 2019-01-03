@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.menu_share -> {
                 val downloadLink = "Download this awesome app and save all your favourite whatsapp status easily\n" +
-                        "Playstore Link: ${getString(R.string.app_playstore_link)}"
+                        "PlayStore Link: ${getString(R.string.app_playstore_link_template)}$packageName"
                 val shareTitle = "Share this app"
                 val shareIntent = ShareCompat.IntentBuilder.from(this)
                 shareIntent.setChooserTitle(shareTitle)
@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         val dialog = builder.create()
         val p = Pattern.compile("here")
         Linkify.addLinks(v.about_me, p, null, null) { _, _ ->
-            "http://www.ismailnurudeen.xyz"
+            getString(R.string.my_website)
         }
         v.ok_btn.setOnClickListener {
             dialog.dismiss()
@@ -169,13 +169,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun rateThisApp() {
-        val uri = Uri.parse("market://details?id=$packageName")
+        val uri = Uri.parse("getString(R.string.market_id_template)$packageName")
         val rateIntent = Intent(Intent.ACTION_VIEW, uri)
         rateIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY.or(Intent.FLAG_ACTIVITY_CLEAR_TASK).or(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
         try {
             startActivity(rateIntent)
         } catch (e: ActivityNotFoundException) {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${getString(R.string.app_playstore_link_template)}$packageName")))
         }
     }
 

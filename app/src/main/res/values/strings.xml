@@ -15,11 +15,13 @@
     <!--AdMob values-->
     <string name="app_id">ca-app-pub-6262072701452947~7795108663</string>
     <string name="sample_banner_ad_unit">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="bottom_banner_ad_unit">ca-app-pub-6262072701452947/1393351849</string>
+
     <string name="no_status_txt">Oopps... Theres no status available go to Whatsapp view a status then comeback and click the refresh button or you could just do it now.</string>
     <string name="no_downloaded_status_txt">Oopps... You haven\'t downloaded any status yet,go to all status and download some</string>
-    <string name="no_permission_txt">The app needs External Storage Permission to work,pls grant permission to continue</string>
+    <string name="no_permission_txt">The app needs External Storage Permission to work,please grant permission to continue</string>
     <string name="title_activity_settings">Settings</string>
-    <string name="app_playstore_link">https://play.google.com/store/apps/details?id=xyz.ismailnurudeen.whatsappstatusdownloader</string>
+    <string name="app_playstore_link_template">https://play.google.com/store/apps/details?id=</string>
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
@@ -30,4 +32,6 @@
     <string name="slide_show_time_key">SLIDE_SHOW_TIME</string>
     <string name="slide_show_time_minmax">Min 5 secs,Max 60 secs</string>
     <string name="rate_this_app">Rate this app</string>
+    <string name="my_website">http://www.ismailnurudeen.xyz</string>
+    <string name="market_id_template">market://details?id=</string>
 </resources>

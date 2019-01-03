@@ -34,13 +34,13 @@ import java.util.concurrent.TimeUnit
 
 class AppUtil(val context: Context) {
     val TAG = "whatsappstatusstealer"
-    val allStatuses = FileUtils.listFiles(File(Constant.whatsAppStatusDir), arrayOf("jpg", "png", "jpeg", "mp4"), true)
-    val savedStatuses = FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)
-    val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+    val allStatuses: MutableCollection<File> = FileUtils.listFiles(File(Constant.whatsAppStatusDir), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    val savedStatuses: MutableCollection<File> = FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)!!
 
     @SuppressLint("InflateParams")
     fun renameFileAndDownload(pos: Int, listener: OnUserDialogResponse) {
-        var name = allStatuses!!.elementAt(pos).name
+        var name = allStatuses.elementAt(pos).name
         val useDefaultName = sharedPrefs.getBoolean(context.getString(R.string.use_default_name_key), false)
         if (useDefaultName) {
 
@@ -77,7 +77,7 @@ class AppUtil(val context: Context) {
     private fun downloadStatus(pos: Int, fileName: String): Boolean {
         var isDownloaded = false
 
-        if (allStatuses!!.isNotEmpty() && pos < allStatuses.size) {
+        if (allStatuses.isNotEmpty() && pos < allStatuses.size) {
             val pathToStoreStatus = if (fileName.contains(".jpg", true) || fileName.contains(".mp4", true)) {
                 "${Constant.appFolder}/$fileName"
             } else {
@@ -238,7 +238,7 @@ class AppUtil(val context: Context) {
                 .start()
     }
 
-  fun showSavedStatusTapTarget(activity: Activity) {
+    fun showSavedStatusTapTarget(activity: Activity) {
         val helpSequence = TapTargetSequence(activity)
         val itemView = getRvFirstItem(activity.downloaded_status_rv)
         helpSequence.target(TapTarget.forView(itemView.status_download_btn, "Delete Status", "Use this button to delete a status")

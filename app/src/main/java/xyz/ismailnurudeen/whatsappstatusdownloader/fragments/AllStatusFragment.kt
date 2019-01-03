@@ -51,7 +51,6 @@ class AllStatusFragment : Fragment() {
         super.onViewCreated(v, savedInstanceState)
         setHasOptionsMenu(true)
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
-            // setupMainTabBadge(activity!!.findViewById(R.id.main_tablayout), 2)
             loadStatuses()
         }
     }
@@ -80,11 +79,12 @@ class AllStatusFragment : Fragment() {
                     StatusAdapter.OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DOWNLOAD_BUTTON -> {
                         val responseListener = object : AppUtil.OnUserDialogResponse {
                             override fun onResponse(status: Boolean) {
-                                savedStatuses = appUtil.savedStatuses
+                                savedStatuses = AppUtil(context!!).savedStatuses
                                 val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
                                 val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
                                 badge.text = "${savedStatuses!!.size}"
                                 v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
+                                Toast.makeText(context, "Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
                             }
                         }
                         appUtil.renameFileAndDownload(pos, responseListener)

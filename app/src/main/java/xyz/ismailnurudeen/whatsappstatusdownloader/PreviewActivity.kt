@@ -62,7 +62,7 @@ class PreviewActivity : AppCompatActivity() {
 
         val fragPagerAdapter = AltPreviewAdapter(supportFragmentManager)
         for (i in 0 until statusList.size) {
-            fragPagerAdapter.addFragment(PreviewFragment.newInstance(i,fromAll,onSlideCompleteListener))
+            fragPagerAdapter.addFragment(PreviewFragment.newInstance(i, fromAll, onSlideCompleteListener))
         }
 
         preview_pager.adapter = fragPagerAdapter
@@ -99,11 +99,6 @@ class PreviewActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        overridePendingTransition(R.anim.slide_in_top, R.anim.slide_out_bottom)
     }
 
     interface PreviewReadyListener {

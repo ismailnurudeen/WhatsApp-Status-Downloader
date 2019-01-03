@@ -32,11 +32,7 @@ class SettingsActivity : AppCompatPreferenceActivity(), SharedPreferences.OnShar
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
         val prefScreen = preferenceScreen
         val count = prefScreen.preferenceCount
-        if (sharedPreferences.getBoolean(this.getString(R.string.do_slide_show_key), false)) {
-            findPreference(slideShowTime).isEnabled = true
-        } else {
-            findPreference(slideShowTime).isEnabled = false
-        }
+        findPreference(slideShowTime).isEnabled = sharedPreferences.getBoolean(this.getString(R.string.do_slide_show_key), false)
         for (i in 0 until count) {
             val pref = prefScreen.getPreference(i)
             if (!(pref is SwitchPreference) && !(pref is CheckBoxPreference)) {
@@ -73,11 +69,7 @@ class SettingsActivity : AppCompatPreferenceActivity(), SharedPreferences.OnShar
         val pref = findPreference(key)
         if (null != pref) {
             if (key.equals(doSlideShowKey)) {
-                if (sharedPreferences.getBoolean(doSlideShowKey, false)) {
-                    findPreference(slideShowTime).isEnabled = true
-                } else {
-                    findPreference(slideShowTime).isEnabled = false
-                }
+                findPreference(slideShowTime).isEnabled = sharedPreferences.getBoolean(doSlideShowKey, false)
             }
         }
     }

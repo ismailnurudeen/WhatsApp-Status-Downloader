@@ -68,14 +68,12 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
         }
 
-
-
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         mSlideShow = sharedPrefs.getBoolean(context?.getString(R.string.do_slide_show_key), true)
         mShowVideoControls = sharedPrefs.getBoolean(context?.getString(R.string.show_video_controls_key), false)
         val slideShowTime = sharedPrefs.getString(context?.getString(R.string.slide_show_time_key), "15")
-        if (slideShowTime.isNotEmpty()) {
-            mSlideShowTime = if (slideShowTime.toInt() < 5) {
+        mSlideShowTime = if (slideShowTime.isNotEmpty()) {
+            if (slideShowTime.toInt() < 5) {
                 5
             } else if (slideShowTime.toInt() > 60) {
                 60
@@ -83,7 +81,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
                 slideShowTime.toLong()
             }
         } else {
-            mSlideShowTime = 15
+            15
         }
     }
 
@@ -135,8 +133,8 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             preview.image_preview.visibility = View.GONE
             preview.video_preview.setVideoPath(file.absolutePath)
 
-            mSlideShowTime = AppUtil(context!!).getVideoDuration(file)
-            Log.i("M_SLIDE_SHOW_TIME", "Video Slide Show time $mSlideShow")
+            mSlideShowTime = appUtil.getVideoDuration(file)
+            Log.i("SlideShowTime", "Video Duration is $mSlideShow")
             mSlideShowTime = 30
             preview.video_preview.start()
 
@@ -180,8 +178,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
 
         preview.toolbar_time_left.text = "${previewTitles[position]} left"
         preview.preview_download.setOnClickListener {
-            val aUtil = AppUtil(context!!)
-            aUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
+            appUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
                 override fun onResponse(status: Boolean) {
                     if (status) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
                 }
@@ -232,13 +229,6 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
             true
         }
-//        preview.video_preview.setOnClickListener {
-//            mSlideCompleteListener?.onSlideComplete(position)
-//            if (progressAnimator != null && progressAnimator!!.isRunning) {
-//                isUserSlide = true
-//                progressAnimator!!.cancel()
-//            }
-//        }
         preview.image_preview.setOnTouchListener { _, event ->
             if (event.action == KeyEvent.ACTION_DOWN) {
                 preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
@@ -249,13 +239,6 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
             true
         }
-//        preview.image_preview.setOnClickListener {
-//            mSlideCompleteListener?.onSlideComplete(position)
-//            if (progressAnimator != null && progressAnimator!!.isRunning) {
-//                isUserSlide = true
-//                progressAnimator!!.cancel()
-//            }
-//        }
     }
 
     private fun gotoMainActivity() {

@@ -31,13 +31,10 @@ import java.io.File
 class DownloadedStatusFragment : Fragment() {
     var savedStatuses: MutableCollection<File>? = null
     val TAG = "whatsappstatusstealer"
-    lateinit var deleteToast: Toast
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var appUtil: AppUtil
-    @SuppressLint("ShowToast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        deleteToast = Toast.makeText(context, "", Toast.LENGTH_SHORT)
         sharedPrefs = context!!.getSharedPreferences("STATUS_PREFS", Context.MODE_PRIVATE)
         appUtil = AppUtil(context!!)
     }
@@ -50,7 +47,7 @@ class DownloadedStatusFragment : Fragment() {
     fun loadStatuses() {
         val f = File(Constant.appFolder)
         if (!f.exists()) f.mkdir()
-
+        appUtil = AppUtil(context!!)
         savedStatuses = appUtil.savedStatuses
         setupTabBadge()
 
@@ -73,10 +70,7 @@ class DownloadedStatusFragment : Fragment() {
                             downloaded_status_rv.adapter!!.notifyDataSetChanged()
                             setupTabBadge()
                             if (savedStatuses!!.isEmpty()) loadStatuses()
-
-                            deleteToast.cancel()
-                            deleteToast.setText("Status Deleted")
-                            deleteToast.show()
+                            Toast.makeText(context, "Status Deleted...", Toast.LENGTH_SHORT).show()
                         }
                     }
                     else -> {
@@ -105,7 +99,6 @@ class DownloadedStatusFragment : Fragment() {
                 val responseListener = object : AppUtil.OnUserDialogResponse {
                     override fun onResponse(status: Boolean) {
                         savedStatuses!!.clear()
-                        adapter.notifyDataSetChanged()
                         Toast.makeText(context, "All Downloaded Status Deleted Successfully...", Toast.LENGTH_SHORT).show()
                         loadStatuses()
                     }
@@ -141,7 +134,6 @@ class DownloadedStatusFragment : Fragment() {
                     loadStatuses()
                 }
             }
-            //_hasLoadedOnce = true
         }
     }
 
