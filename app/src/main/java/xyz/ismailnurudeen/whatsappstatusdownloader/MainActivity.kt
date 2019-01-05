@@ -35,9 +35,9 @@ import java.util.regex.Pattern
 
 
 class MainActivity : AppCompatActivity() {
-    val TAG = "whatsappstatusstealer"
-    var headerFont: Typeface? = null
-    var bodyFont: Typeface? = null
+    private val TAG = "whatsappstatusstealer"
+    lateinit var headerFont: Typeface
+    lateinit var bodyFont: Typeface
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -48,6 +48,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(main_toolbar)
 
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
+            try {
+               AppUtil(this)
+            } catch (iae: IllegalArgumentException) {
+                displayNoPermissionView(false)
+                return
+            }
             setupMainViewPager()
         }
 
@@ -98,23 +104,27 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("NewApi")
     private fun setupTabBadge(tablayout: TabLayout, length: Int) {
-        val aUtils = AppUtil(this)
-        val count = arrayOf(aUtils.allStatuses.size, aUtils.savedStatuses.size)
-        for (i in 0 until length) {
-            val tab = tablayout.getTabAt(i)
-            tab?.setCustomView(R.layout.custom_tab_view)
-            val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
-            tabText.typeface = headerFont
+        try {
+            val aUtils=AppUtil(this)
+            val count = arrayOf(aUtils.allStatuses.size, aUtils.savedStatuses.size)
+            for (i in 0 until length) {
+                val tab = tablayout.getTabAt(i)
+                tab?.setCustomView(R.layout.custom_tab_view)
+                val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
+                tabText.typeface = headerFont
 
-            if (tab.customView != null) {
-                val badge = tab.customView?.findViewById(R.id.badge) as TextView
-                badge.text = "${count[i]}"
-                badge.typeface = headerFont
-                if (i == 0) {
-                    tabText.setTextColor(Color.WHITE)
-                    badge.backgroundTintList = ContextCompat.getColorStateList(this, android.R.color.white)
+                if (tab.customView != null) {
+                    val badge = tab.customView?.findViewById(R.id.badge) as TextView
+                    badge.text = "${count[i]}"
+                    badge.typeface = headerFont
+                    if (i == 0) {
+                        tabText.setTextColor(Color.WHITE)
+                        badge.backgroundTintList = ContextCompat.getColorStateList(this, android.R.color.white)
+                    }
                 }
             }
+        } catch (iae: IllegalArgumentException) {
+            displayNoPermissionView(false)
         }
     }
 
@@ -204,13 +214,36 @@ class MainActivity : AppCompatActivity() {
                 Log.v(TAG, "Permission: " + permissions[0] + "was " + grantResults[0])
                 setupMainViewPager()
             } else {
-                no_permission_view.visibility = View.VISIBLE
-                main_tablayout.visibility = View.GONE
-                Glide.with(this)
-                        .load(R.drawable.emoji_head_scratch)
-                        .into(no_permission_iv)
-                permission_btn.setOnClickListener {
-                    checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)
+                displayNoPermissionView()
+            }
+        }
+    }
+
+    fun displayNoPermissionView(isPermission: Boolean = true) {
+        no_permission_view.visibility = View.VISIBLE
+        main_tablayout.visibility = View.GONE
+        Glide.with(this)
+                .load(R.drawable.emoji_head_scratch)
+                .into(no_permission_iv)
+        if (isPermission) {
+            permission_btn.visibility = View.VISIBLE
+            download_whatsApp_btn.visibility = View.GONE
+            no_permission_tv.text = getString(R.string.no_permission_txt)
+            permission_btn.setOnClickListener {
+                checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)
+            }
+        } else {
+            no_permission_tv.text = getString(R.string.no_whatsapp_txt)
+            permission_btn.visibility = View.GONE
+            download_whatsApp_btn.visibility = View.VISIBLE
+            download_whatsApp_btn.setOnClickListener {
+                val uri = Uri.parse("getString(R.string.market_id_template)com.whatsapp")
+                val rateIntent = Intent(Intent.ACTION_VIEW, uri)
+                rateIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY.or(Intent.FLAG_ACTIVITY_CLEAR_TASK).or(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                try {
+                    startActivity(rateIntent)
+                } catch (e: ActivityNotFoundException) {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${getString(R.string.app_playstore_link_template)}com.whatsapp")))
                 }
             }
         }

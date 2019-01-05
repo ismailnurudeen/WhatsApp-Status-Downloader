@@ -47,7 +47,13 @@ class DownloadedStatusFragment : Fragment() {
     fun loadStatuses() {
         val f = File(Constant.appFolder)
         if (!f.exists()) f.mkdir()
-        appUtil = AppUtil(context!!)
+        try {
+            appUtil = AppUtil(context!!)
+        } catch (iae: IllegalArgumentException) {
+            Toast.makeText(context, "WhatsApp folder could not be found!", Toast.LENGTH_LONG).show()
+            activity!!.finish()
+            return
+        }
         savedStatuses = appUtil.savedStatuses
         setupTabBadge()
 

@@ -19,4 +19,9 @@
         <!-- Customize your theme here. -->
         <!--<item name="windowBackground">@android:color/black</item>-->
     </style>
+
+    <style name="SplashTheme" parent="MainActivityBaseTheme">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@drawable/window_bg</item>
+    </style>
 </resources>

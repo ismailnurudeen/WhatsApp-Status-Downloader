@@ -34,8 +34,20 @@ import java.util.concurrent.TimeUnit
 
 class AppUtil(val context: Context) {
     val TAG = "whatsappstatusstealer"
-    val allStatuses: MutableCollection<File> = FileUtils.listFiles(File(Constant.whatsAppStatusDir), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
-    val savedStatuses: MutableCollection<File> = FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+
+    val allStatuses: MutableCollection<File> = try {
+        FileUtils.listFiles(File(Constant.whatsAppStatusDir), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    } catch (iae: IllegalArgumentException) {
+        throw IllegalArgumentException()
+    }
+
+    val savedStatuses: MutableCollection<File> = try {
+        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    } catch (iae: IllegalArgumentException) {
+        File(Constant.appFolder).mkdir()
+        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    }
+
     private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)!!
 
     @SuppressLint("InflateParams")
@@ -209,20 +221,24 @@ class AppUtil(val context: Context) {
                         .transparentTarget(true)
                         .descriptionTextColorInt(Color.WHITE)
                         .id(2))
-                .target(TapTarget.forToolbarMenuItem(
-                        toolbar, R.id.menu_share,
-                        "Share",
-                        "Click this icon to share the app with friends and family"
-                )
-                        .tintTarget(true)
-                        .descriptionTextColorInt(Color.WHITE)
-                        .id(3))
-                .target(TapTarget.forToolbarOverflow(toolbar,
-                        "More Options and Customization",
-                        "Click this icon to see more options like; Settings,About and Help")
-                        .tintTarget(true)
-                        .descriptionTextColorInt(Color.WHITE)
-                        .id(4))
+        try {
+            helpSequence.target(TapTarget.forToolbarMenuItem(
+                    toolbar, R.id.menu_share,
+                    "Share",
+                    "Click this icon to share the app with friends and family"
+            )
+                    .tintTarget(true)
+                    .descriptionTextColorInt(Color.WHITE)
+                    .id(3))
+        } catch (e: Exception) {
+            //Do nothing...
+        }
+        helpSequence.target(TapTarget.forToolbarOverflow(toolbar,
+                "More Options and Customization",
+                "Click this icon to see more options like; Settings,About and Help")
+                .tintTarget(true)
+                .descriptionTextColorInt(Color.WHITE)
+                .id(4))
                 .listener(object : TapTargetSequence.Listener {
                     override fun onSequenceCanceled(lastTarget: TapTarget?) {
                     }

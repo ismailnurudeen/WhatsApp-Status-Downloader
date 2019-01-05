@@ -8,17 +8,16 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import android.widget.Toast
 import com.ToxicBakery.viewpager.transforms.RotateDownTransformer
 import kotlinx.android.synthetic.main.activity_preview.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.AltPreviewAdapter
-import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.PreviewAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.fragments.PreviewFragment
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import java.io.File
 import java.util.*
 
 class PreviewActivity : AppCompatActivity() {
-    lateinit var pagerAdapter: PreviewAdapter
     val titles = ArrayList<String>()
     lateinit var statusList: MutableCollection<File>
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,8 +25,14 @@ class PreviewActivity : AppCompatActivity() {
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
         setContentView(R.layout.activity_preview)
-        val appUtil = AppUtil(this)
-
+        val appUtil: AppUtil
+        try {
+            appUtil = AppUtil(this)
+        } catch (iae: IllegalArgumentException) {
+            Toast.makeText(this, "WhatsApp folder could not be found!", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         val extras = intent.extras
         val position = extras!!.getInt("POSITION")
         val fromAll = extras.getBoolean("FROM_ALL", true)
@@ -45,8 +50,6 @@ class PreviewActivity : AppCompatActivity() {
         }
         val onSlideCompleteListener = object : PreviewFragment.OnSlideCompleteListener {
             override fun onSlideComplete(pos: Int) {
-                // Toast.makeText(this@PreviewActivity, "Slide Complete", Toast.LENGTH_SHORT).show()
-//                && pos > PreviewFragment.tempPosition
                 if (pos < statusList.size - 1) {
                     preview_pager.currentItem = pos + 1
                 } else {
@@ -56,10 +59,6 @@ class PreviewActivity : AppCompatActivity() {
         }
 
         preview_pager.setPageTransformer(true, RotateDownTransformer())
-//        pagerAdapter = PreviewAdapter(this, statusList, titles, onSlideCompleteListener)
-//        preview_pager.adapter = pagerAdapter
-//        preview_pager.setCurrentItem(position)
-
         val fragPagerAdapter = AltPreviewAdapter(supportFragmentManager)
         for (i in 0 until statusList.size) {
             fragPagerAdapter.addFragment(PreviewFragment.newInstance(i, fromAll, onSlideCompleteListener))

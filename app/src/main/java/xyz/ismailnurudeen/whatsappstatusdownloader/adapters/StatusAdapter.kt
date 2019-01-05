@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.layout_status_item.view.*
 import org.apache.commons.io.FileUtils
@@ -15,7 +16,12 @@ import java.io.File
 class StatusAdapter(private val context: Context, private val statusList: MutableCollection<File>, private val onItemClick: OnItemClickListener, val onItemLongClick: OnItemLongClickListener, val showDownloadIcon: Boolean = true) : RecyclerView.Adapter<StatusAdapter.StatusHolder>() {
 
     override fun onBindViewHolder(holder: StatusHolder, position: Int) {
-        holder.bind(statusList.elementAt(position))
+        try {
+            holder.bind(statusList.elementAt(position))
+        } catch (iae: IllegalArgumentException) {
+            Toast.makeText(context, "WhatsApp folder could not be found!", Toast.LENGTH_LONG).show()
+            return
+        }
     }
 
     override fun getItemCount(): Int = statusList.size
@@ -45,12 +51,13 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
                 itemView.status_time_left.text = status.name
                 itemView.status_time_left_label.visibility = View.GONE
             } else {
-                //Set download icon to green if file has already been downloaded
+                //    Set download icon to green if file has already been downloaded
                 for (savedFile in AppUtil(context).savedStatuses) {
                     if (FileUtils.contentEquals(status, savedFile)) {
                         itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
                     }
                 }
+
                 itemView.status_time_left.text = AppUtil(context).getStatusTimeLeft(status)
                 itemView.status_download_btn.setOnClickListener {
                     itemClick.onItemClick(it, adapterPosition, OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DOWNLOAD_BUTTON)

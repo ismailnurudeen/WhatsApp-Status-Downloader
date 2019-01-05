@@ -3,7 +3,6 @@ package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
@@ -23,7 +22,6 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.layout_preview.view.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
-import xyz.ismailnurudeen.whatsappstatusdownloader.MainActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
@@ -52,7 +50,14 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        appUtil = AppUtil(context!!)
+        try {
+            appUtil = AppUtil(context!!)
+        } catch (iae: IllegalArgumentException) {
+            Toast.makeText(context, "WhatsApp folder could not be found!", Toast.LENGTH_LONG).show()
+            activity!!.finish()
+            return
+        }
+
         val args = arguments
         position = args?.getInt("POSITION") ?: position
         fromAllStatus = args!!.getBoolean("USE_ALL_STATUS")
@@ -176,7 +181,11 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         setListenersForMedia(preview)
 
 
-        preview.toolbar_time_left.text = "${previewTitles[position]} left"
+        preview.toolbar_time_left.text = if (fromAllStatus) {
+            "${previewTitles[position]} left"
+        } else {
+            previewTitles[position]
+        }
         preview.preview_download.setOnClickListener {
             appUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
                 override fun onResponse(status: Boolean) {
@@ -242,9 +251,10 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
     }
 
     private fun gotoMainActivity() {
-        val backIntent = Intent(context, MainActivity::class.java)
-        backIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(backIntent)
+//        val backIntent = Intent(context, MainActivity::class.java)
+//        backIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+//        startActivity(backIntent)
+        activity!!.finish()
     }
 
     private fun animateSlider(preview: View, pos: Int) {

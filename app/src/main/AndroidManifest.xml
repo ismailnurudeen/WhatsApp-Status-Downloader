@@ -3,6 +3,7 @@
     package="xyz.ismailnurudeen.whatsappstatusdownloader">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -32,13 +33,19 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="xyz.ismailnurudeen.whatsappstatusdownloader.MainActivity" />
         </activity>
-        <activity android:name="xyz.ismailnurudeen.whatsappstatusdownloader.SplashActivity">
+        <activity
+            android:name="xyz.ismailnurudeen.whatsappstatusdownloader.SplashActivity"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="38a73e0b78c047a9dba66d06e96f6eb12715fd05" />
     </application>
 
 </manifest>
