@@ -8,6 +8,7 @@ import android.widget.VideoView
 class StatusVideoView : VideoView {
 
     private var mListener: PlayPauseListener? = null
+    var isPaused: Boolean = false
 
     constructor(context: Context) : super(context)
 
@@ -23,6 +24,7 @@ class StatusVideoView : VideoView {
         super.pause()
         if (mListener != null) {
             mListener!!.onPause()
+            isPaused = true
         }
     }
 
@@ -30,7 +32,13 @@ class StatusVideoView : VideoView {
         super.start()
         if (mListener != null) {
             mListener!!.onPlay()
+            isPaused = false
         }
+    }
+
+    override fun resume() {
+        super.resume()
+        isPaused = false
     }
 
     interface PlayPauseListener {

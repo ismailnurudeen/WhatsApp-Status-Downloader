@@ -1,7 +1,6 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -24,6 +23,7 @@ import kotlinx.android.synthetic.main.layout_status_empty.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
+import xyz.ismailnurudeen.whatsappstatusdownloader.ResponseStatus
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.StatusAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import java.io.File
@@ -93,6 +93,8 @@ class DownloadedStatusFragment : Fragment() {
         if (savedStatuses!!.isNotEmpty()) {
             downloaded_status_rv.visibility = View.VISIBLE
             empty_layout.visibility = View.GONE
+            delete_all_downloads.show()
+
             val adapter = StatusAdapter(context!!, savedStatuses!!, onClick, onLongClick, false)
             downloaded_status_rv.adapter = adapter
             if (sharedPrefs.getBoolean("IS_FIRST_LAUNCH_DOWNLOADED_STATUS", true)) {
@@ -103,10 +105,12 @@ class DownloadedStatusFragment : Fragment() {
             }
             delete_all_downloads.setOnClickListener {
                 val responseListener = object : AppUtil.OnUserDialogResponse {
-                    override fun onResponse(status: Boolean) {
-                        savedStatuses!!.clear()
-                        Toast.makeText(context, "All Downloaded Status Deleted Successfully...", Toast.LENGTH_SHORT).show()
-                        loadStatuses()
+                    override fun onResponse(status: Int) {
+                        if (status == ResponseStatus.SUCCESSFUL) {
+                            savedStatuses!!.clear()
+                            Toast.makeText(context, "All Downloaded Status Deleted Successfully...", Toast.LENGTH_SHORT).show()
+                            loadStatuses()
+                        }
                     }
                 }
                 appUtil.deleteAllFiles(responseListener)
@@ -115,6 +119,10 @@ class DownloadedStatusFragment : Fragment() {
         } else {
             downloaded_status_rv.visibility = View.GONE
             empty_layout.visibility = View.VISIBLE
+            refresh_btn.visibility = View.VISIBLE
+            launch_whatsApp_btn.visibility = View.GONE
+            delete_all_downloads.hide()
+
             empty_view_tv.text = context!!.getString(R.string.no_downloaded_status_txt)
             refresh_btn.setOnClickListener {
                 loadStatuses()
@@ -125,7 +133,6 @@ class DownloadedStatusFragment : Fragment() {
         }
     }
 
-    @SuppressLint("NewApi")
     private fun setupTabBadge() {
         val tab = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
         val badge = tab?.customView?.findViewById(R.id.badge) as TextView

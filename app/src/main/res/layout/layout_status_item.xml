@@ -21,7 +21,17 @@
             android:layout_marginStart="8dp"
             app:civ_border_color="#BBBEC4"
             app:civ_border_width="3dp"
-            tools:src="@drawable/emoji_head_scratch" />
+            tools:src="@drawable/dev_pic" />
+
+        <ImageView
+            android:id="@+id/video_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/status_image"
+            android:layout_alignEnd="@+id/status_image"
+            android:tint="@color/colorAccent"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_videocam_black_24dp" />
 
         <TextView
             android:id="@+id/status_time_left_label"
@@ -34,8 +44,8 @@
             android:layout_toStartOf="@id/status_download_btn"
             android:gravity="start"
             android:text="Estimated time left"
-            android:textSize="18sp"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/status_time_left"

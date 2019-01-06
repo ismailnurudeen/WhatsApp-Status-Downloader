@@ -4,7 +4,7 @@
         <shape>
             <solid android:color="#95A1A9"/>
             <size
-                android:height="3dp"/>
+                android:height="2.8dp"/>
             <corners android:radius="6dp" />
         </shape>
     </item>

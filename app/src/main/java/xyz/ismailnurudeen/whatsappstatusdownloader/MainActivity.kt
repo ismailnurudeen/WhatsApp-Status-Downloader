@@ -1,7 +1,6 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -49,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
             try {
-               AppUtil(this)
+                AppUtil(this)
             } catch (iae: IllegalArgumentException) {
                 displayNoPermissionView(false)
                 return
@@ -82,30 +81,27 @@ class MainActivity : AppCompatActivity() {
             override fun onTabReselected(tab: TabLayout.Tab?) {
             }
 
-            @SuppressLint("NewApi")
             override fun onTabUnselected(tab: TabLayout.Tab?) {
                 val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
                 val badge = tab.customView?.findViewById(R.id.badge) as TextView
 
                 tabText.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.unselected_tab_color))
-                badge.backgroundTintList = ContextCompat.getColorStateList(this@MainActivity, R.color.unselected_tab_color)
+                AppUtil(this@MainActivity).setBackgroundTint(badge, R.color.unselected_tab_color)
             }
 
-            @SuppressLint("NewApi")
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 val tabText = tab?.customView?.findViewById(android.R.id.text1) as TextView
                 val badge = tab.customView?.findViewById(R.id.badge) as TextView
 
                 tabText.setTextColor(Color.WHITE)
-                badge.backgroundTintList = ContextCompat.getColorStateList(this@MainActivity, android.R.color.white)
+                AppUtil(this@MainActivity).setBackgroundTint(badge, android.R.color.white)
             }
         })
     }
 
-    @SuppressLint("NewApi")
     private fun setupTabBadge(tablayout: TabLayout, length: Int) {
         try {
-            val aUtils=AppUtil(this)
+            val aUtils = AppUtil(this)
             val count = arrayOf(aUtils.allStatuses.size, aUtils.savedStatuses.size)
             for (i in 0 until length) {
                 val tab = tablayout.getTabAt(i)
@@ -119,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                     badge.typeface = headerFont
                     if (i == 0) {
                         tabText.setTextColor(Color.WHITE)
-                        badge.backgroundTintList = ContextCompat.getColorStateList(this, android.R.color.white)
+                        AppUtil(this@MainActivity).setBackgroundTint(badge, android.R.color.white)
                     }
                 }
             }

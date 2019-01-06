@@ -25,16 +25,9 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
     }
 
     override fun getItemCount(): Int = statusList.size
-    override fun getItemViewType(position: Int): Int {
-        return if (statusList.isEmpty()) {
-            R.layout.layout_status_empty
-        } else {
-            R.layout.layout_status_item
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StatusHolder {
-        val view = LayoutInflater.from(context).inflate(viewType, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.layout_status_item, parent, false)
         return StatusHolder(view, onItemClick, onItemLongClick)
     }
 
@@ -43,6 +36,9 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
             Glide.with(context)
                     .load(status)
                     .into(itemView.status_image)
+            itemView.video_icon.visibility = View.GONE
+            if (!status.extension.contains("jpg", true)) itemView.video_icon.visibility = View.VISIBLE
+
             if (!showDownloadIcon) {
                 itemView.status_download_btn.setImageResource(R.drawable.ic_delete_black_24dp)
                 itemView.status_download_btn.setOnClickListener {
@@ -55,6 +51,8 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
                 for (savedFile in AppUtil(context).savedStatuses) {
                     if (FileUtils.contentEquals(status, savedFile)) {
                         itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
+                    } else {
+                        itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.default_drawable_tint), android.graphics.PorterDuff.Mode.SRC_IN)
                     }
                 }
 

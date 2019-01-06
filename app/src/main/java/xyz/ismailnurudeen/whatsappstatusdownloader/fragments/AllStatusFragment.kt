@@ -1,7 +1,7 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader.fragments
 
 import android.Manifest
-import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -26,6 +26,7 @@ import kotlinx.android.synthetic.main.layout_status_item.view.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
+import xyz.ismailnurudeen.whatsappstatusdownloader.ResponseStatus
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.StatusAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import java.io.File
@@ -34,12 +35,10 @@ class AllStatusFragment : Fragment() {
     var savedStatuses: MutableCollection<File>? = null
     var allStatuses: MutableCollection<File>? = null
     private lateinit var sharedPrefs: SharedPreferences
-    lateinit var appUtil: AppUtil
     private var _hasLoadedOnce = false
     val TAG = "whatsappstatusstealer"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        appUtil = AppUtil(context!!)
         sharedPrefs = context!!.getSharedPreferences("STATUS_PREFS", Context.MODE_PRIVATE)
     }
 
@@ -59,6 +58,7 @@ class AllStatusFragment : Fragment() {
         val f = File(Constant.appFolder)
         if (!f.exists()) f.mkdir()
 
+        val appUtil = AppUtil(context!!)
         allStatuses = appUtil.allStatuses
         savedStatuses = appUtil.savedStatuses
         setupTabBadge()
@@ -78,13 +78,17 @@ class AllStatusFragment : Fragment() {
                     }
                     StatusAdapter.OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DOWNLOAD_BUTTON -> {
                         val responseListener = object : AppUtil.OnUserDialogResponse {
-                            override fun onResponse(status: Boolean) {
-                                savedStatuses = AppUtil(context!!).savedStatuses
-                                val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
-                                val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
-                                badge.text = "${savedStatuses!!.size}"
-                                v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
-                                Toast.makeText(context, "Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
+                            override fun onResponse(status: Int) {
+                                if (status == ResponseStatus.SUCCESSFUL) {
+                                    savedStatuses = AppUtil(context!!).savedStatuses
+                                    val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
+                                    val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
+                                    badge.text = "${savedStatuses!!.size}"
+                                    v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
+                                    Toast.makeText(context, "Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Status Download Failed!...", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                         appUtil.renameFileAndDownload(pos, responseListener)
@@ -104,6 +108,8 @@ class AllStatusFragment : Fragment() {
         if (allStatuses!!.isNotEmpty()) {
             status_rv.visibility = View.VISIBLE
             empty_layout.visibility = View.GONE
+            save_all.show()
+
             status_rv.adapter = StatusAdapter(context!!, allStatuses!!, onClick, onLongClick)
             if (sharedPrefs.getBoolean("IS_FIRST_LAUNCH_ALL_STATUS", true)) {
                 Handler().postDelayed({
@@ -114,8 +120,18 @@ class AllStatusFragment : Fragment() {
         } else {
             status_rv.visibility = View.GONE
             empty_layout.visibility = View.VISIBLE
-            refresh_btn.setOnClickListener {
-                loadStatuses()
+            refresh_btn.visibility = View.GONE
+            save_all.hide()
+            launch_whatsApp_btn.visibility = View.VISIBLE
+
+            launch_whatsApp_btn.setOnClickListener {
+                try {
+                    val whatsappIntent = Intent(Intent.ACTION_SEND)
+                    whatsappIntent.setPackage("com.whatsapp")
+                    startActivity(whatsappIntent)
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(context!!, "WhatsApp not Installed!", Toast.LENGTH_SHORT).show()
+                }
             }
             Glide.with(context!!)
                     .load(R.drawable.emoji_question_mark)
@@ -124,9 +140,11 @@ class AllStatusFragment : Fragment() {
         save_all.setOnClickListener {
             if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
                 appUtil.downloadAllStatus(object : AppUtil.OnUserDialogResponse {
-                    override fun onResponse(status: Boolean) {
-                        Toast.makeText(context, "All Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
-                        loadStatuses()
+                    override fun onResponse(status: Int) {
+                        if (status == ResponseStatus.SUCCESSFUL) {
+                            Toast.makeText(context, "All Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
+                            loadStatuses()
+                        }
                     }
 
                 })
@@ -134,7 +152,6 @@ class AllStatusFragment : Fragment() {
         }
     }
 
-    @SuppressLint("NewApi")
     private fun setupTabBadge() {
         val tab = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(0) ?: return
         val tabText = tab.customView?.findViewById(android.R.id.text1) as TextView
@@ -142,7 +159,7 @@ class AllStatusFragment : Fragment() {
         badge.text = "${allStatuses!!.size}"
 
         tabText.setTextColor(Color.WHITE)
-        badge.backgroundTintList = ContextCompat.getColorStateList(context!!, android.R.color.white)
+        AppUtil(context!!).setBackgroundTint(badge, android.R.color.white)
     }
 
     private fun checkPermission(permission: String, requestCode: Int): Boolean {
@@ -187,7 +204,7 @@ class AllStatusFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item!!.itemId) {
-            R.id.menu_help -> appUtil.showAllStatusTapTarget(activity!!)
+            R.id.menu_help -> AppUtil(context!!).showAllStatusTapTarget(activity!!)
         }
         return false
     }

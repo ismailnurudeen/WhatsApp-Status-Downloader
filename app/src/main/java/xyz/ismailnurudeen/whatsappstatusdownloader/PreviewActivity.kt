@@ -18,7 +18,7 @@ import java.io.File
 import java.util.*
 
 class PreviewActivity : AppCompatActivity() {
-    val titles = ArrayList<String>()
+    private val titles = ArrayList<String>()
     lateinit var statusList: MutableCollection<File>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

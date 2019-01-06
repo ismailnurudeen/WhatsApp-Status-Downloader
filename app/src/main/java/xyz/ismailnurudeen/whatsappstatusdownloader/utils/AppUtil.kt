@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.preference.PreferenceManager
+import android.support.v4.content.ContextCompat
+import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -25,6 +28,7 @@ import kotlinx.android.synthetic.main.layout_status_item.view.*
 import org.apache.commons.io.FileUtils
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
+import xyz.ismailnurudeen.whatsappstatusdownloader.ResponseStatus
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -57,7 +61,13 @@ class AppUtil(val context: Context) {
         if (useDefaultName) {
 
             //Download the status...
-            listener.onResponse(downloadStatus(pos, name))
+            val response = if (downloadStatus(pos, name)) {
+                ResponseStatus.SUCCESSFUL
+            } else {
+                ResponseStatus.FAILED
+            }
+            listener.onResponse(response)
+
         } else {
             val inputView = LayoutInflater.from(context).inflate(R.layout.layout_rename_dialog, null)
             val dialog = AlertDialog.Builder(context)
@@ -74,12 +84,18 @@ class AppUtil(val context: Context) {
                 if (new_name.isNotEmpty()) {
                     name = new_name
                     dialog.dismiss()
+                    listener.onResponse(ResponseStatus.CANCLED)
                     val prefs = context.getSharedPreferences(context.getString(R.string.shared_prefs_name), Context.MODE_PRIVATE).edit()
                     prefs.putBoolean(context.getString(R.string.use_default_name_key), inputView.rename_dialog_checkbox.isChecked).apply()
 
                     Log.i(TAG, "File Renamed...")
                     //Download the status...
-                    listener.onResponse(downloadStatus(pos, name))
+                    val response = if (downloadStatus(pos, name)) {
+                        ResponseStatus.SUCCESSFUL
+                    } else {
+                        ResponseStatus.FAILED
+                    }
+                    listener.onResponse(response)
                 }
             }
         }
@@ -111,6 +127,7 @@ class AppUtil(val context: Context) {
                 .setMessage("Do you want to download all status?")
                 .setNegativeButton("Cancel") { dialog, _ ->
                     dialog.dismiss()
+                    listener.onResponse()
                 }.setPositiveButton("Yes") { _, _ ->
                     FileUtils.copyDirectory(File(Constant.whatsAppStatusDir), File(Constant.appFolder))
                     listener.onResponse()
@@ -280,8 +297,18 @@ class AppUtil(val context: Context) {
                 .start()
     }
 
-    interface OnUserDialogResponse {
+    fun setBackgroundTint(v: View, color: Int) {
+        val tint = ContextCompat.getColorStateList(context, color)
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
+            v.backgroundTintList = tint
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            v.background.setColorFilter(context.resources.getColor(color), PorterDuff.Mode.MULTIPLY)
+        } else {
+            ViewCompat.setBackgroundTintList(v, tint)
+        }
+    }
 
-        fun onResponse(status: Boolean = true)
+    interface OnUserDialogResponse {
+        fun onResponse(status: Int = ResponseStatus.SUCCESSFUL)
     }
 }

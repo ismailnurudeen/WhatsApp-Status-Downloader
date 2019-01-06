@@ -17,7 +17,7 @@
     <string name="sample_banner_ad_unit">ca-app-pub-3940256099942544/6300978111</string>
     <string name="bottom_banner_ad_unit">ca-app-pub-6262072701452947/1393351849</string>
 
-    <string name="no_status_txt">Oopps... Theres are no status available at the moment,\n Go to WhatsApp and view a status, then come back and click the refresh button.</string>
+    <string name="no_status_txt">Oopps... There are no status available at the moment,\nClick the button below to go to WhatsApp and view a status,then come back here and download it</string>
     <string name="no_downloaded_status_txt">Oopps... You haven\'t downloaded any status yet,go to all status and download some</string>
     <string name="no_permission_txt">The app needs External Storage Permission to work,please grant permission to continue</string>
     <string name="no_whatsapp_txt">WhatsApp could not be detected!\n If you don\'t already have WhatsApp Installed,Click below to Download and Install WhatsApp</string>

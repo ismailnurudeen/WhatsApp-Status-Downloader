@@ -24,6 +24,7 @@ import kotlinx.android.synthetic.main.layout_preview.view.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
 import xyz.ismailnurudeen.whatsappstatusdownloader.R
+import xyz.ismailnurudeen.whatsappstatusdownloader.ResponseStatus
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.StatusVideoView
 import java.io.File
@@ -35,11 +36,12 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
     private var _isFirstLoad = false
     private lateinit var sharedPrefs: SharedPreferences
     private var mSlideShow: Boolean = true
-    private var mSlideShowTime: Long = 30
+    private var mSlideShowTime: Float = 30.0F
     private var mShowVideoControls: Boolean = false
     private var progressAnimator: ObjectAnimator? = null
     private var isUserSlide = false
     private var fromAllStatus = true
+    private var isLongClicked = false
 
     private var previewTitles = ArrayList<String>()
     private lateinit var statusList: MutableCollection<File>
@@ -79,14 +81,14 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         val slideShowTime = sharedPrefs.getString(context?.getString(R.string.slide_show_time_key), "15")
         mSlideShowTime = if (slideShowTime.isNotEmpty()) {
             if (slideShowTime.toInt() < 5) {
-                5
+                5.0F
             } else if (slideShowTime.toInt() > 60) {
-                60
+                60.0F
             } else {
-                slideShowTime.toLong()
+                slideShowTime.toFloat()
             }
         } else {
-            15
+            15.0F
         }
     }
 
@@ -138,9 +140,11 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             preview.image_preview.visibility = View.GONE
             preview.video_preview.setVideoPath(file.absolutePath)
 
-            mSlideShowTime = appUtil.getVideoDuration(file)
-            Log.i("SlideShowTime", "Video Duration is $mSlideShow")
-            mSlideShowTime = 30
+            mSlideShowTime = appUtil.getVideoDuration(file) / 1000F
+            Log.i("SlideShowTime", "Meta Data Video Duration is $mSlideShowTime")
+            preview.video_preview.setOnPreparedListener {
+                Log.i("SlideShowTime", "Normal Video Duration is ${(it.duration.toFloat() / 1000F)}")
+            }
             preview.video_preview.start()
 
             if (mShowVideoControls) {
@@ -187,11 +191,19 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             previewTitles[position]
         }
         preview.preview_download.setOnClickListener {
-            appUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
-                override fun onResponse(status: Boolean) {
-                    if (status) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
-                }
+            var video: StatusVideoView? = null
+            if (progressAnimator != null && progressAnimator!!.isRunning) progressAnimator!!.pause()
+            if (preview.video_preview.isPlaying) {
+                preview.video_preview.pause()
+                video = preview.video_preview
+            }
 
+            appUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
+                override fun onResponse(status: Int) {
+                    if (status == ResponseStatus.SUCCESSFUL) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
+                    if (video != null && !preview.video_preview.isPlaying && preview.video_preview.currentPosition > 1) preview.video_preview.resume()
+                    if (progressAnimator != null && progressAnimator!!.isRunning) progressAnimator!!.resume()
+                }
             })
         }
         if (fromAllStatus) {
@@ -234,6 +246,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
                 progressAnimator?.pause()
             } else if (event.action == KeyEvent.ACTION_UP) {
                 preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+                if (preview.video_preview.currentPosition.toFloat() == mSlideShowTime / 1000F) progressAnimator?.end()
                 if (preview.video_preview.isPlaying) progressAnimator?.resume()
             }
             true
@@ -248,18 +261,33 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             }
             true
         }
+
+//        preview.preview_media_wrapper.setOnTouchListener { _, event ->
+//            if (event.action == KeyEvent.ACTION_UP && isLongClicked) {
+//                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
+//                progressAnimator?.resume()
+//                isLongClicked = false
+//            }
+//            true
+//        }
+//        preview.preview_media_wrapper.setOnLongClickListener {
+//            preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
+//            progressAnimator?.pause()
+//            isLongClicked = true
+//            false
+//        }
+//        preview.preview_media_wrapper.setOnClickListener {
+//            progressAnimator?.end()
+//        }
     }
 
     private fun gotoMainActivity() {
-//        val backIntent = Intent(context, MainActivity::class.java)
-//        backIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-//        startActivity(backIntent)
         activity!!.finish()
     }
 
     private fun animateSlider(preview: View, pos: Int) {
         progressAnimator = ObjectAnimator.ofInt(preview.toolbar_progressBar, "progress", 0, 100)
-        progressAnimator?.duration = mSlideShowTime * 1000
+        progressAnimator?.duration = (mSlideShowTime * 1000).toLong()
         progressAnimator?.interpolator = DecelerateInterpolator()
 
         progressAnimator?.addListener(object : Animator.AnimatorListener {
