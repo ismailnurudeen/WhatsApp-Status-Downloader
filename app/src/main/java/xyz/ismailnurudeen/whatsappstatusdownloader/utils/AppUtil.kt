@@ -38,26 +38,29 @@ import java.util.concurrent.TimeUnit
 
 class AppUtil(val context: Context) {
     val TAG = "whatsappstatusstealer"
-
+    private val defaultSharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)!!
     val allStatuses: MutableCollection<File> = try {
         FileUtils.listFiles(File(Constant.whatsAppStatusDir), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
     } catch (iae: IllegalArgumentException) {
         throw IllegalArgumentException()
     }
 
-    val savedStatuses: MutableCollection<File> = try {
-        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
-    } catch (iae: IllegalArgumentException) {
-        File(Constant.appFolder).mkdir()
-        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    private val appFolder = if (defaultSharedPrefs.getBoolean(context.getString(R.string.hide_downloads_key), false)) {
+        "${Constant.hiddenAppFolder}/${context.packageName}/.DownloadedWhatsAppStatuses"
+    } else {
+        Constant.appFolder
     }
-
-    private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)!!
+    val savedStatuses: MutableCollection<File> = try {
+        FileUtils.listFiles(File(appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    } catch (iae: IllegalArgumentException) {
+        File(appFolder).mkdir()
+        FileUtils.listFiles(File(appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+    }
 
     @SuppressLint("InflateParams")
     fun renameFileAndDownload(pos: Int, listener: OnUserDialogResponse) {
         var name = allStatuses.elementAt(pos).name
-        val useDefaultName = sharedPrefs.getBoolean(context.getString(R.string.use_default_name_key), false)
+        val useDefaultName = this.defaultSharedPrefs.getBoolean(context.getString(R.string.use_default_name_key), false)
         if (useDefaultName) {
 
             //Download the status...

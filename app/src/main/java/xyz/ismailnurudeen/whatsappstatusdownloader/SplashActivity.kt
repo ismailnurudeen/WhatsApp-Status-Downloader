@@ -21,7 +21,6 @@ class SplashActivity : AppCompatActivity() {
                 .load(R.drawable.emoji_remembering)
                 .into(splash_gif_holder)
         MobileAds.initialize(this, getString(R.string.app_id))
-        AdRequest.Builder().addTestDevice("EE61FFC39B2F91254A201499649C0082")
         Handler().postDelayed({
             startActivity(Intent(this, MainActivity::class.java))
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)

@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.design.widget.TabLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.ShareCompat
@@ -28,12 +30,14 @@ import com.google.android.gms.ads.AdRequest
 import kotlinx.android.synthetic.main.about_dialog_layout.view.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.layout_no_permission.*
+import org.apache.commons.io.FileUtils
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.MainViewPagerAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
+import java.io.File
 import java.util.regex.Pattern
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
     private val TAG = "whatsappstatusstealer"
     lateinit var headerFont: Typeface
     lateinit var bodyFont: Typeface
@@ -45,18 +49,25 @@ class MainActivity : AppCompatActivity() {
         bodyFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeueLt.ttf")
 
         setSupportActionBar(main_toolbar)
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this)
 
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
+           //Create Neccessary app folders
+            setUpAppDirectories()
             try {
-                AppUtil(this)
+                AppUtil(this).allStatuses
             } catch (iae: IllegalArgumentException) {
+                Log.e(TAG, iae.message)
                 displayNoPermissionView(false)
                 return
             }
             setupMainViewPager()
         }
 
-        main_adView.loadAd(AdRequest.Builder().build())
+        main_adView.loadAd(AdRequest.Builder()
+                .addTestDevice("EE61FFC39B2F91254A201499649C0082")
+                .build())
         main_adView.adListener = object : AdListener() {
             override fun onAdOpened() {
                 //TODO:Add margin bottom to View pager
@@ -86,7 +97,11 @@ class MainActivity : AppCompatActivity() {
                 val badge = tab.customView?.findViewById(R.id.badge) as TextView
 
                 tabText.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.unselected_tab_color))
-                AppUtil(this@MainActivity).setBackgroundTint(badge, R.color.unselected_tab_color)
+                try {
+                    AppUtil(this@MainActivity).setBackgroundTint(badge, R.color.unselected_tab_color)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
             override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -94,7 +109,10 @@ class MainActivity : AppCompatActivity() {
                 val badge = tab.customView?.findViewById(R.id.badge) as TextView
 
                 tabText.setTextColor(Color.WHITE)
-                AppUtil(this@MainActivity).setBackgroundTint(badge, android.R.color.white)
+                try {
+                    AppUtil(this@MainActivity).setBackgroundTint(badge, android.R.color.white)
+                } catch (e: Exception) {
+                }
             }
         })
     }
@@ -185,6 +203,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        Log.i("PREFERENCES", "BOOM! i got here...")
+        if (key.equals(getString(R.string.hide_downloads_key))) {
+            Log.i("PREFERENCES", key)
+            if (sharedPreferences!!.getBoolean(key, false)) {
+                try {
+                    FileUtils.moveDirectory(File(Constant.appFolder), File("${Constant.hiddenAppFolder}/${packageName}/.DownloadedWhatsAppStatuses"))
+                } catch (e: Exception) {
+                    Log.e("PREF_ERROR", e.message)
+                }
+            } else {
+                try {
+                    FileUtils.moveDirectory(File("${Constant.hiddenAppFolder}/$packageName/.DownloadedWhatsAppStatuses"), File(Constant.appFolder))
+                } catch (e: Exception) {
+                    Log.e("PREF_ERROR", e.message)
+                }
+            }
+        }
+    }
+
     private fun checkPermission(permission: String, requestCode: Int): Boolean {
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this,
@@ -215,6 +253,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun setUpAppDirectories() {
+        val visibleFolder = File(Constant.appFolder)
+        val invisibleFolder = File("${Constant.hiddenAppFolder}/$packageName/.DownloadedWhatsAppStatuses")
+        if (!visibleFolder.exists()) visibleFolder.mkdir()
+        if (!invisibleFolder.exists()) invisibleFolder.mkdir()
+    }
+
     fun displayNoPermissionView(isPermission: Boolean = true) {
         no_permission_view.visibility = View.VISIBLE
         main_tablayout.visibility = View.GONE
@@ -243,5 +288,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this)
     }
 }

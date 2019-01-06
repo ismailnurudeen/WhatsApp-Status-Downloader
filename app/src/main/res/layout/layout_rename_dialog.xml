@@ -7,6 +7,7 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:cardElevation="5dp"
         app:contentPadding="8dp">
 
         <RelativeLayout
@@ -29,9 +30,9 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="30dp"
+                android:selectAllOnFocus="true"
                 android:text="file name"
-                android:textColor="@android:color/black"
-                android:selectAllOnFocus="true"/>
+                android:textColor="@android:color/black" />
 
             <CheckBox
                 android:id="@+id/rename_dialog_checkbox"
@@ -39,28 +40,32 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@id/rename_dialog_input"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:text="Always use Default Name" />
 
             <Button
                 android:id="@+id/rename_dialog_cancel"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@id/rename_dialog_checkbox"
-                android:layout_marginStart="8dp"
-                android:text="Cancel" />
+                android:layout_marginStart="16dp"
+                android:text="Cancel"
+                android:textSize="18sp" />
 
             <Button
                 android:id="@+id/rename_dialog_rename"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_below="@id/rename_dialog_checkbox"
-                android:layout_marginEnd="8dp"
-                android:text="Download" />
+                android:layout_marginEnd="16dp"
+                android:text="Download"
+                android:textSize="18sp" />
         </RelativeLayout>
     </android.support.v7.widget.CardView>
 </android.support.constraint.ConstraintLayout>

@@ -50,6 +50,7 @@ class DownloadedStatusFragment : Fragment() {
         try {
             appUtil = AppUtil(context!!)
         } catch (iae: IllegalArgumentException) {
+            Log.i("PREF_ERROR", iae.localizedMessage)
             Toast.makeText(context, "WhatsApp folder could not be found!", Toast.LENGTH_LONG).show()
             activity!!.finish()
             return

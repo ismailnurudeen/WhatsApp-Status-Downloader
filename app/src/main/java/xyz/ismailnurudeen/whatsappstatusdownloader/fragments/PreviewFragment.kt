@@ -20,6 +20,9 @@ import android.widget.MediaController
 import android.widget.PopupMenu
 import android.widget.Toast
 import com.bumptech.glide.Glide
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.InterstitialAd
 import kotlinx.android.synthetic.main.layout_preview.view.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
 import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
@@ -49,6 +52,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
     private var mSlideCompleteListener: OnSlideCompleteListener? = null
 
     private lateinit var appUtil: AppUtil
+    private lateinit var mInterstitialAd: InterstitialAd
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +94,15 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         } else {
             15.0F
         }
+        // Create the InterstitialAd and set it up.
+        mInterstitialAd = InterstitialAd(context!!).apply {
+            adUnitId = context!!.getString(R.string.fullscreen_ad_unit)
+            adListener = (object : AdListener() {
+                override fun onAdClosed() {
+                }
+            })
+        }
+        loadFullScreenAd()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -148,9 +161,10 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             preview.video_preview.start()
 
             if (mShowVideoControls) {
+                if (context == null) return
                 controller = MediaController(context)
                 preview.video_preview.setMediaController(controller)
-                controller!!.show(5)
+                controller?.show(5)
                 preview.video_preview.setPlayPauseListener(object : StatusVideoView.PlayPauseListener {
                     override fun onPlay() {
                         if (progressAnimator != null && progressAnimator!!.isPaused) {
@@ -190,21 +204,34 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         } else {
             previewTitles[position]
         }
+        var pausePosition = 0
         preview.preview_download.setOnClickListener {
-            var video: StatusVideoView? = null
-            if (progressAnimator != null && progressAnimator!!.isRunning) progressAnimator!!.pause()
-            if (preview.video_preview.isPlaying) {
-                preview.video_preview.pause()
-                video = preview.video_preview
+            //            var video: StatusVideoView? = null
+            if (progressAnimator != null && progressAnimator!!.isRunning) {
+                progressAnimator!!.pause()
+                Log.i("OnResponse", "Progress paused...")
             }
-
-            appUtil.renameFileAndDownload(position, object : AppUtil.OnUserDialogResponse {
+//            if (preview.video_preview.isPlaying) {
+//                Log.i("OnResponse", "Video position before pause ${preview.video_preview.currentPosition}")
+//                pausePosition = preview.video_preview.currentPosition
+//                preview.video_preview.pause()
+//                video = preview.video_preview
+//            }
+            val responseListener = object : AppUtil.OnUserDialogResponse {
                 override fun onResponse(status: Int) {
                     if (status == ResponseStatus.SUCCESSFUL) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
-                    if (video != null && !preview.video_preview.isPlaying && preview.video_preview.currentPosition > 1) preview.video_preview.resume()
-                    if (progressAnimator != null && progressAnimator!!.isRunning) progressAnimator!!.resume()
+//                    if (video != null) {
+//                        preview.video_preview.seekTo(pausePosition)
+//                        preview.video_preview.start()
+//                        Log.i("OnResponse", "Video current position ${preview.video_preview.currentPosition}")
+//                    }
+                    if (progressAnimator != null && progressAnimator!!.isPaused) {
+                        progressAnimator!!.resume()
+                        Log.i("OnResponse", "Progress resumed...")
+                    }
                 }
-            })
+            }
+            appUtil.renameFileAndDownload(position, responseListener)
         }
         if (fromAllStatus) {
             preview.preview_download.visibility = View.VISIBLE
@@ -262,20 +289,6 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
             true
         }
 
-//        preview.preview_media_wrapper.setOnTouchListener { _, event ->
-//            if (event.action == KeyEvent.ACTION_UP && isLongClicked) {
-//                preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in))
-//                progressAnimator?.resume()
-//                isLongClicked = false
-//            }
-//            true
-//        }
-//        preview.preview_media_wrapper.setOnLongClickListener {
-//            preview.preview_toolbar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_out))
-//            progressAnimator?.pause()
-//            isLongClicked = true
-//            false
-//        }
 //        preview.preview_media_wrapper.setOnClickListener {
 //            progressAnimator?.end()
 //        }
@@ -296,6 +309,9 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
 
             override fun onAnimationEnd(animation: Animator?) {
                 if (!isUserSlide) {
+                    if (pos >= statusList.size - 1) {
+                        showInterstitial()
+                    }
                     mSlideCompleteListener?.onSlideComplete(pos)
                     if (pos < statusList.size) preview.toolbar_progressBar.progress = 0
                 }
@@ -314,10 +330,20 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
 
     }
 
-    override fun onStop() {
-        super.onStop()
-        if (progressAnimator != null) {
-            progressAnimator?.removeAllListeners()
+    private fun showInterstitial() {
+        if (mInterstitialAd.isLoaded) {
+            mInterstitialAd.show()
+        } else {
+            Log.i("ADMOB_AD", "Ad wasn't loaded.")
+        }
+    }
+
+    private fun loadFullScreenAd() {
+        if (!mInterstitialAd.isLoading && !mInterstitialAd.isLoaded) {
+            val adRequest = AdRequest.Builder()
+                    .addTestDevice("EE61FFC39B2F91254A201499649C0082")
+                    .build()
+            mInterstitialAd.loadAd(adRequest)
         }
     }
 

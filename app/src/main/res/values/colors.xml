@@ -5,4 +5,5 @@
     <color name="colorAccent">#21C65A</color>
     <color name="unselected_tab_color">#B6CFCD</color>
     <color name="default_drawable_tint">#464646</color>
+    <color name="video_ic_color">#128C7E</color>
 </resources>

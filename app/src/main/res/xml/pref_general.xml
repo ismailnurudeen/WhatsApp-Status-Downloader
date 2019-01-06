@@ -25,4 +25,10 @@
         android:key="@string/show_video_controls_key"
         android:summary="Display control buttons for video status"
         android:title="Enable Video Controls" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/hide_downloads_key"
+        android:summary="@string/hide_downloaded_status_summary"
+        android:title="Hide Downloaded Status" />
 </PreferenceScreen>

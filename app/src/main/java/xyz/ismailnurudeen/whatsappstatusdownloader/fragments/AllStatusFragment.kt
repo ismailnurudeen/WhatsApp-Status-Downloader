@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -86,7 +87,7 @@ class AllStatusFragment : Fragment() {
                                     badge.text = "${savedStatuses!!.size}"
                                     v.status_download_btn.setColorFilter(context!!.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
                                     Toast.makeText(context, "Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
-                                } else {
+                                } else if (status == ResponseStatus.FAILED) {
                                     Toast.makeText(context, "Status Download Failed!...", Toast.LENGTH_SHORT).show()
                                 }
                             }
@@ -125,12 +126,19 @@ class AllStatusFragment : Fragment() {
             launch_whatsApp_btn.visibility = View.VISIBLE
 
             launch_whatsApp_btn.setOnClickListener {
-                try {
-                    val whatsappIntent = Intent(Intent.ACTION_SEND)
-                    whatsappIntent.setPackage("com.whatsapp")
+                val whatsappIntent = context!!.packageManager.getLaunchIntentForPackage("com.whatsapp")
+                if (whatsappIntent == null) {
+                    val uri = Uri.parse("getString(R.string.market_id_template)com.whatsapp")
+                    val rateIntent = Intent(Intent.ACTION_VIEW, uri)
+                    rateIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY.or(Intent.FLAG_ACTIVITY_CLEAR_TASK).or(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                    try {
+                        startActivity(rateIntent)
+                    } catch (e: ActivityNotFoundException) {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${getString(R.string.app_playstore_link_template)}com.whatsapp")))
+                    }
+                } else {
+                    whatsappIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY.or(Intent.FLAG_ACTIVITY_CLEAR_TASK).or(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
                     startActivity(whatsappIntent)
-                } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(context!!, "WhatsApp not Installed!", Toast.LENGTH_SHORT).show()
                 }
             }
             Glide.with(context!!)
@@ -204,7 +212,11 @@ class AllStatusFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item!!.itemId) {
-            R.id.menu_help -> AppUtil(context!!).showAllStatusTapTarget(activity!!)
+            R.id.menu_help -> if (allStatuses!!.isNotEmpty()) {
+                AppUtil(context!!).showAllStatusTapTarget(activity!!)
+            } else {
+                Toast.makeText(context!!, "Help is currently on the screen,please follow the instructions first :)", Toast.LENGTH_LONG).show()
+            }
         }
         return false
     }

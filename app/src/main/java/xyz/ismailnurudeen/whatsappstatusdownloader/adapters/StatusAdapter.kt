@@ -44,7 +44,9 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
                 itemView.status_download_btn.setOnClickListener {
                     itemClick.onItemClick(it, adapterPosition, OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DELETE_BUTTON)
                 }
-                itemView.status_time_left.text = status.name
+                itemView.status_file_name.text = status.name
+                itemView.status_file_name.visibility = View.VISIBLE
+                itemView.status_time_left.visibility = View.GONE
                 itemView.status_time_left_label.visibility = View.GONE
             } else {
                 //    Set download icon to green if file has already been downloaded
@@ -57,6 +59,8 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
                 }
 
                 itemView.status_time_left.text = AppUtil(context).getStatusTimeLeft(status)
+                itemView.status_file_name.visibility = View.GONE
+                itemView.status_time_left.visibility = View.VISIBLE
                 itemView.status_download_btn.setOnClickListener {
                     itemClick.onItemClick(it, adapterPosition, OnItemClickListener.Companion.ITEM_CLICKED_TYPE.DOWNLOAD_BUTTON)
                 }
