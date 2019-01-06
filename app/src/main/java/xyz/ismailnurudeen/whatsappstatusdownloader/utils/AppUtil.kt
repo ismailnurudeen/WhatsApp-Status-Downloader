@@ -74,7 +74,7 @@ class AppUtil(val context: Context) {
                     .setView(inputView)
                     .create()
             dialog.show()
-
+            listener.onResponse(ResponseStatus.CANCLED)
             inputView.rename_dialog_input.setText(name)
             inputView.rename_dialog_cancel.setOnClickListener {
                 dialog.dismiss()
@@ -84,7 +84,6 @@ class AppUtil(val context: Context) {
                 if (new_name.isNotEmpty()) {
                     name = new_name
                     dialog.dismiss()
-                    listener.onResponse(ResponseStatus.CANCLED)
                     val prefs = context.getSharedPreferences(context.getString(R.string.shared_prefs_name), Context.MODE_PRIVATE).edit()
                     prefs.putBoolean(context.getString(R.string.use_default_name_key), inputView.rename_dialog_checkbox.isChecked).apply()
 
