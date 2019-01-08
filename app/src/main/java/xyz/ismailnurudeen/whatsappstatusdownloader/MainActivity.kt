@@ -1,21 +1,21 @@
 package xyz.ismailnurudeen.whatsappstatusdownloader
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.support.design.widget.TabLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.ShareCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.text.util.Linkify
 import android.util.Log
@@ -30,14 +30,13 @@ import com.google.android.gms.ads.AdRequest
 import kotlinx.android.synthetic.main.about_dialog_layout.view.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.layout_no_permission.*
-import org.apache.commons.io.FileUtils
 import xyz.ismailnurudeen.whatsappstatusdownloader.adapters.MainViewPagerAdapter
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import java.io.File
 import java.util.regex.Pattern
 
 
-class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+class MainActivity : AppCompatActivity() {
     private val TAG = "whatsappstatusstealer"
     lateinit var headerFont: Typeface
     lateinit var bodyFont: Typeface
@@ -49,16 +48,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         bodyFont = Typeface.createFromAsset(assets, "fonts/HelveticaNeueLt.ttf")
 
         setSupportActionBar(main_toolbar)
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this)
 
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 101)) {
-           //Create Neccessary app folders
+            //Create Neccessary app folders
             setUpAppDirectories()
+
             try {
                 AppUtil(this).allStatuses
             } catch (iae: IllegalArgumentException) {
-                Log.e(TAG, iae.message)
+                //Log.e(TAG, iae.message)
                 displayNoPermissionView(false)
                 return
             }
@@ -100,7 +98,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 try {
                     AppUtil(this@MainActivity).setBackgroundTint(badge, R.color.unselected_tab_color)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    //e.printStackTrace()
                 }
             }
 
@@ -161,11 +159,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                         .setType("*/*")
                         .setText(downloadLink)
                 val apkFile = AppUtil(this).getApkFile()
-                if (apkFile != null) shareIntent.setStream(Uri.fromFile(apkFile))
+                if (apkFile != null) shareIntent.setStream(FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", apkFile))
                 shareIntent.startChooser()
-            }
-            R.id.menu_help -> {
-
             }
             R.id.menu_about -> {
                 showAboutDialog()
@@ -177,6 +172,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return false
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showAboutDialog() {
         val v = LayoutInflater.from(this).inflate(R.layout.about_dialog_layout, null)
         val builder = AlertDialog.Builder(this)
@@ -186,6 +182,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         Linkify.addLinks(v.about_me, p, null, null) { _, _ ->
             getString(R.string.my_website)
         }
+        v.version_code.text = "v${BuildConfig.VERSION_NAME}"
         v.ok_btn.setOnClickListener {
             dialog.dismiss()
         }
@@ -200,26 +197,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             startActivity(rateIntent)
         } catch (e: ActivityNotFoundException) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${getString(R.string.app_playstore_link_template)}$packageName")))
-        }
-    }
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        Log.i("PREFERENCES", "BOOM! i got here...")
-        if (key.equals(getString(R.string.hide_downloads_key))) {
-            Log.i("PREFERENCES", key)
-            if (sharedPreferences!!.getBoolean(key, false)) {
-                try {
-                    FileUtils.moveDirectory(File(Constant.appFolder), File("${Constant.hiddenAppFolder}/${packageName}/.DownloadedWhatsAppStatuses"))
-                } catch (e: Exception) {
-                    Log.e("PREF_ERROR", e.message)
-                }
-            } else {
-                try {
-                    FileUtils.moveDirectory(File("${Constant.hiddenAppFolder}/$packageName/.DownloadedWhatsAppStatuses"), File(Constant.appFolder))
-                } catch (e: Exception) {
-                    Log.e("PREF_ERROR", e.message)
-                }
-            }
         }
     }
 
@@ -290,9 +267,4 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this)
-    }
 }

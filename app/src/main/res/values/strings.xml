@@ -14,7 +14,6 @@
 
     <!--AdMob values-->
     <string name="app_id">ca-app-pub-6262072701452947~7795108663</string>
-    <string name="sample_banner_ad_unit">ca-app-pub-3940256099942544/6300978111</string>
     <string name="bottom_banner_ad_unit">ca-app-pub-6262072701452947/1393351849</string>
     <string name="fullscreen_ad_unit">ca-app-pub-6262072701452947/8051829774</string>
 
@@ -35,7 +34,4 @@
     <string name="slide_show_time_minmax">Min 5 secs,Max 60 secs</string>
     <string name="rate_this_app">Rate this app</string>
     <string name="my_website">http://www.ismailnurudeen.xyz</string>
-    <string name="market_id_template">market://details?id=</string>
-    <string name="hide_downloads_key">prefs_hide_downloads</string>
-    <string name="hide_downloaded_status_summary">Hide downloaded statuses from your phone gallery \nNote: hidden statuses would be lost when you unistall the app</string>
 </resources>

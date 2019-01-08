@@ -45,16 +45,11 @@ class AppUtil(val context: Context) {
         throw IllegalArgumentException()
     }
 
-    private val appFolder = if (defaultSharedPrefs.getBoolean(context.getString(R.string.hide_downloads_key), false)) {
-        "${Constant.hiddenAppFolder}/${context.packageName}/.DownloadedWhatsAppStatuses"
-    } else {
-        Constant.appFolder
-    }
     val savedStatuses: MutableCollection<File> = try {
-        FileUtils.listFiles(File(appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
     } catch (iae: IllegalArgumentException) {
-        File(appFolder).mkdir()
-        FileUtils.listFiles(File(appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
+        File(Constant.appFolder).mkdir()
+        FileUtils.listFiles(File(Constant.appFolder), arrayOf("jpg", "png", "jpeg", "mp4"), true)!!
     }
 
     @SuppressLint("InflateParams")

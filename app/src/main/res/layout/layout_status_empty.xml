@@ -35,24 +35,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/no_status_iv" />
 
-        <TextView
-            android:id="@+id/refresh_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="32dp"
-            android:background="?android:selectableItemBackground"
-            android:drawableTint="@color/colorPrimaryDark"
-            android:drawableTop="@drawable/refresh_icon_drawable"
-            android:gravity="center_horizontal"
-            android:text="Refresh"
-            android:textSize="24sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.515"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/empty_view_tv" />
-
         <Button
             android:id="@+id/launch_whatsApp_btn"
             android:layout_width="wrap_content"

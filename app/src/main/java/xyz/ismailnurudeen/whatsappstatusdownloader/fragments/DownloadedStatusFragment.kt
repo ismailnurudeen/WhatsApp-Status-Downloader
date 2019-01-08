@@ -120,14 +120,10 @@ class DownloadedStatusFragment : Fragment() {
         } else {
             downloaded_status_rv.visibility = View.GONE
             empty_layout.visibility = View.VISIBLE
-            refresh_btn.visibility = View.VISIBLE
             launch_whatsApp_btn.visibility = View.GONE
             delete_all_downloads.hide()
 
             empty_view_tv.text = context!!.getString(R.string.no_downloaded_status_txt)
-            refresh_btn.setOnClickListener {
-                loadStatuses()
-            }
             Glide.with(context!!)
                     .load(R.drawable.emoji_question_mark)
                     .into(no_status_iv)

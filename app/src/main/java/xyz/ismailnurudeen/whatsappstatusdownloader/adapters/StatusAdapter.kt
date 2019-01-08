@@ -53,9 +53,10 @@ class StatusAdapter(private val context: Context, private val statusList: Mutabl
                 for (savedFile in AppUtil(context).savedStatuses) {
                     if (FileUtils.contentEquals(status, savedFile)) {
                         itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN)
-                    } else {
-                        itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.default_drawable_tint), android.graphics.PorterDuff.Mode.SRC_IN)
                     }
+//                    else {
+//                        itemView.status_download_btn.setColorFilter(context.resources.getColor(R.color.default_drawable_tint), android.graphics.PorterDuff.Mode.SRC_IN)
+//                    }
                 }
 
                 itemView.status_time_left.text = AppUtil(context).getStatusTimeLeft(status)

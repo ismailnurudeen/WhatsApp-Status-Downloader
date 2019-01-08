@@ -121,7 +121,6 @@ class AllStatusFragment : Fragment() {
         } else {
             status_rv.visibility = View.GONE
             empty_layout.visibility = View.VISIBLE
-            refresh_btn.visibility = View.GONE
             save_all.hide()
             launch_whatsApp_btn.visibility = View.VISIBLE
 
@@ -150,6 +149,11 @@ class AllStatusFragment : Fragment() {
                 appUtil.downloadAllStatus(object : AppUtil.OnUserDialogResponse {
                     override fun onResponse(status: Int) {
                         if (status == ResponseStatus.SUCCESSFUL) {
+                            savedStatuses = AppUtil(context!!).savedStatuses
+                            val tab2 = activity?.findViewById<TabLayout>(R.id.main_tablayout)?.getTabAt(1)
+                            val badge = tab2?.customView?.findViewById(R.id.badge) as TextView
+                            badge.text = "${savedStatuses!!.size}"
+
                             Toast.makeText(context, "All Status Downloaded Successfully...", Toast.LENGTH_SHORT).show()
                             loadStatuses()
                         }

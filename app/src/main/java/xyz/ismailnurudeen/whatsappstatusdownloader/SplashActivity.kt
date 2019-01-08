@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.app.AppCompatDelegate
 import com.bumptech.glide.Glide
 import com.crashlytics.android.Crashlytics
 import com.google.android.gms.ads.AdRequest

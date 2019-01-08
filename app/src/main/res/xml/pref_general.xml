@@ -13,8 +13,8 @@
         android:title="Status Slide Show" />
 
     <EditTextPreference
-        android:defaultValue="15"
-        android:hint="15"
+        android:defaultValue="10"
+        android:hint="10"
         android:inputType="number"
         android:key="@string/slide_show_time_key"
         android:summary="@string/slide_show_time_minmax"
@@ -25,10 +25,4 @@
         android:key="@string/show_video_controls_key"
         android:summary="Display control buttons for video status"
         android:title="Enable Video Controls" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:key="@string/hide_downloads_key"
-        android:summary="@string/hide_downloaded_status_summary"
-        android:title="Hide Downloaded Status" />
 </PreferenceScreen>

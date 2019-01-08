@@ -4,11 +4,11 @@ import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
 import android.support.v4.app.ShareCompat
+import android.support.v4.content.FileProvider
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -24,10 +24,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.InterstitialAd
 import kotlinx.android.synthetic.main.layout_preview.view.*
-import xyz.ismailnurudeen.whatsappstatusdownloader.Constant
-import xyz.ismailnurudeen.whatsappstatusdownloader.PreviewActivity
-import xyz.ismailnurudeen.whatsappstatusdownloader.R
-import xyz.ismailnurudeen.whatsappstatusdownloader.ResponseStatus
+import xyz.ismailnurudeen.whatsappstatusdownloader.*
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.AppUtil
 import xyz.ismailnurudeen.whatsappstatusdownloader.utils.StatusVideoView
 import java.io.File
@@ -39,12 +36,11 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
     private var _isFirstLoad = false
     private lateinit var sharedPrefs: SharedPreferences
     private var mSlideShow: Boolean = true
-    private var mSlideShowTime: Float = 30.0F
+    private var mSlideShowTime: Float = 10.0F
     private var mShowVideoControls: Boolean = false
     private var progressAnimator: ObjectAnimator? = null
     private var isUserSlide = false
     private var fromAllStatus = true
-    private var isLongClicked = false
 
     private var previewTitles = ArrayList<String>()
     private lateinit var statusList: MutableCollection<File>
@@ -82,7 +78,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         mSlideShow = sharedPrefs.getBoolean(context?.getString(R.string.do_slide_show_key), true)
         mShowVideoControls = sharedPrefs.getBoolean(context?.getString(R.string.show_video_controls_key), false)
-        val slideShowTime = sharedPrefs.getString(context?.getString(R.string.slide_show_time_key), "15")
+        val slideShowTime = sharedPrefs.getString(context?.getString(R.string.slide_show_time_key), "10")
         mSlideShowTime = if (slideShowTime.isNotEmpty()) {
             if (slideShowTime.toInt() < 5) {
                 5.0F
@@ -92,7 +88,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
                 slideShowTime.toFloat()
             }
         } else {
-            15.0F
+            10.0F
         }
         // Create the InterstitialAd and set it up.
         mInterstitialAd = InterstitialAd(context!!).apply {
@@ -204,27 +200,15 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
         } else {
             previewTitles[position]
         }
-        var pausePosition = 0
         preview.preview_download.setOnClickListener {
-            //            var video: StatusVideoView? = null
             if (progressAnimator != null && progressAnimator!!.isRunning) {
                 progressAnimator!!.pause()
                 Log.i("OnResponse", "Progress paused...")
             }
-//            if (preview.video_preview.isPlaying) {
-//                Log.i("OnResponse", "Video position before pause ${preview.video_preview.currentPosition}")
-//                pausePosition = preview.video_preview.currentPosition
-//                preview.video_preview.pause()
-//                video = preview.video_preview
-//            }
+
             val responseListener = object : AppUtil.OnUserDialogResponse {
                 override fun onResponse(status: Int) {
                     if (status == ResponseStatus.SUCCESSFUL) Toast.makeText(context!!, "Status Downloaded Successfully", Toast.LENGTH_SHORT).show()
-//                    if (video != null) {
-//                        preview.video_preview.seekTo(pausePosition)
-//                        preview.video_preview.start()
-//                        Log.i("OnResponse", "Video current position ${preview.video_preview.currentPosition}")
-//                    }
                     if (progressAnimator != null && progressAnimator!!.isPaused) {
                         progressAnimator!!.resume()
                         Log.i("OnResponse", "Progress resumed...")
@@ -253,7 +237,7 @@ class PreviewFragment : Fragment(), PreviewActivity.PreviewReadyListener {
                     ShareCompat.IntentBuilder.from(activity)
                             .setChooserTitle(shareTitle)
                             .setType("*/*")
-                            .setStream(Uri.fromFile(statusList.elementAt(position)))
+                            .setStream(FileProvider.getUriForFile(context!!, BuildConfig.APPLICATION_ID + ".provider", statusList.elementAt(position)))
                             .startChooser()
                 }
                 true
