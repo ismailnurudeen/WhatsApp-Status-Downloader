@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone" />
 
-        <xyz.ismailnurudeen.whatsappstatusdownloader.utils.StatusVideoView
+        <xyz.ismailnurudeen.whatsappstatusaver.utils.StatusVideoView
             android:id="@+id/video_preview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             android:id="@+id/toolbar_progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="2.8dp"
+            android:layout_height="3dp"
             android:layout_alignParentTop="true"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="4dp"
